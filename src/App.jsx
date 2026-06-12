@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Home, LogIn, Award, BarChart3, Users, Leaf, Coins, 
-  Search, ShieldCheck, ChevronDown, Menu, X, CheckCircle2 
+  Search, ShieldCheck, ChevronDown, Menu, X, CheckCircle2, LogOut 
 } from 'lucide-react';
+import { useAuth } from './context/AuthContext';
+import SignIn from './components/SignIn';
 import DashboardView from './components/DashboardView';
 import LogActionView from './components/LogActionView';
 import ChallengesView from './components/ChallengesView';
@@ -10,6 +12,8 @@ import LeaderboardView from './components/LeaderboardView';
 import AnalyticsView from './components/AnalyticsView';
 
 export default function App() {
+  const { user, loading, logout, getIdToken } = useAuth();
+  
   // Navigation active tab state: 'home', 'log', 'challenges', 'leaderboard', 'analytics'
   const [activeTab, setActiveTab] = useState('home');
   const [activeScope, setActiveScope] = useState('personal');
@@ -65,8 +69,8 @@ export default function App() {
   };
 
   // Actions logging handler
-  const handleLogAction = (action) => {
-    // 1. Update stats
+  const handleLogAction = async (action) => {
+    // 1. Optimistic update to keep UI instant and fluid
     setUserStats(prev => {
       const updatedPersonal = parseFloat((prev.savedPersonal + action.savings).toFixed(2));
       const updatedSageCorp = parseFloat((prev.savedSageCorp + action.savings).toFixed(2));
@@ -94,19 +98,51 @@ export default function App() {
       };
     });
 
-    // 2. Add log entry
     const newLog = {
       id: `log-${Date.now()}`,
       category: action.category,
       savings: action.savings,
       points: action.points,
       description: action.description,
-      date: 'Jun 11, 2026' // hardcoded current mock date
+      date: 'Jun 12, 2026'
     };
     setRecentLogs(prev => [newLog, ...prev]);
 
     showToast(`Logged Action! +${action.points} Cool Points and saved ${action.savings} kg CO2eq!`);
+
+    // 2. Synchronize with the secure Node backend
+    try {
+      const token = await getIdToken();
+      if (!token) {
+        console.warn('[Sync Warning] Missing auth token. Action stored offline.');
+        return;
+      }
+
+      const response = await fetch('http://localhost:5000/api/actions/log', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          category: action.category,
+          savings: action.savings,
+          description: action.description
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP status error: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('[Sync Success] Backend recorded log transaction:', result);
+    } catch (err) {
+      console.warn('[Sync Offline] Express backend connection failed:', err.message);
+      showToast('Recorded locally. Sync with backend failed (offline).');
+    }
   };
+
 
   // Delete Log handler
   const handleDeleteLog = (id) => {
@@ -180,7 +216,6 @@ export default function App() {
             };
           });
 
-          // Show Toast celebration
           setTimeout(() => {
             showToast(`🎉 Challenge Completed! "${ch.title}" earned you +${ch.points} pts & saved ${ch.savedCO2} kg CO2!`);
           }, 300);
@@ -193,7 +228,30 @@ export default function App() {
     }));
   };
 
-  // Determine which view component to render
+  // 1. Loading State Screen
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center p-6">
+        <div className="flex flex-col items-center gap-4 animate-pulse">
+          <div className="w-16 h-16 bg-gray-900 border border-gray-800 rounded-2xl flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
+          </div>
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Resolving user session...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Unauthenticated state redirect to Sign In
+  if (!user) {
+    return <SignIn />;
+  }
+
+  // User Profile configuration
+  const userDisplayName = user.displayName || 'Climate Lead';
+  const userPhotoURL = user.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100';
+  const userEmail = user.email || 'user@sagecorp.com';
+
   const renderView = () => {
     switch (activeTab) {
       case 'home':
@@ -204,6 +262,7 @@ export default function App() {
             activeScope={activeScope}
             setActiveScope={setActiveScope}
             recentLogs={recentLogs}
+            getIdToken={getIdToken}
           />
         );
       case 'log':
@@ -239,6 +298,7 @@ export default function App() {
             activeScope={activeScope}
             setActiveScope={setActiveScope}
             recentLogs={recentLogs}
+            getIdToken={getIdToken}
           />
         );
     }
@@ -322,17 +382,25 @@ export default function App() {
           </nav>
         </div>
 
-        {/* Footer Settings/Profile details */}
-        <div className="p-6 border-t border-gray-850">
+        {/* Footer Settings/Profile details & Logout */}
+        <div className="p-6 border-t border-gray-850 space-y-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-800 border-2 border-emerald-500/30">
-              <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100" alt="Avatar" className="w-full h-full object-cover" />
+            <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-800 border-2 border-emerald-500/30 shrink-0">
+              <img src={userPhotoURL} alt="Avatar" className="w-full h-full object-cover" />
             </div>
-            <div>
-              <p className="text-xs font-bold text-white">Rahul K.</p>
-              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Climate Lead</p>
+            <div className="overflow-hidden">
+              <p className="text-xs font-bold text-white truncate">{userDisplayName}</p>
+              <p className="text-[9px] text-gray-500 font-bold truncate uppercase tracking-wider">{userEmail}</p>
             </div>
           </div>
+          
+          <button 
+            onClick={logout}
+            className="w-full py-2.5 px-3 bg-gray-950 border border-gray-850 hover:bg-rose-950/20 hover:border-rose-900/35 hover:text-rose-400 text-[10px] font-black uppercase tracking-wider rounded-xl transition flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Sign Out</span>
+          </button>
         </div>
       </aside>
 
@@ -355,22 +423,19 @@ export default function App() {
 
           {/* User Metrics & Level Badge */}
           <div className="flex items-center gap-3">
-            {/* Level badge */}
             <div className="flex items-center gap-1.5 bg-emerald-950/30 border border-emerald-900/40 py-1.5 px-3 rounded-2xl shrink-0">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
               <span className="text-[10px] font-black uppercase text-emerald-400 tracking-wider">Level 4: Guardian</span>
             </div>
 
-            {/* Cool Points badge */}
             <div className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20 py-1.5 px-3.5 rounded-2xl shrink-0">
               <Coins className="w-4 h-4 text-yellow-400" />
               <span className="text-xs font-black text-yellow-400 tracking-wide">{userStats.coolPoints.toLocaleString()}</span>
               <span className="text-[9px] uppercase font-bold text-yellow-500/70 tracking-widest hidden sm:inline">pts</span>
             </div>
 
-            {/* Profile Avatar Trigger */}
             <div className="w-9 h-9 rounded-full overflow-hidden border border-gray-800 shrink-0 bg-gray-800 cursor-pointer hover:border-emerald-500/40 transition">
-              <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100" alt="Avatar" className="w-full h-full object-cover" />
+              <img src={userPhotoURL} alt="Avatar" className="w-full h-full object-cover" />
             </div>
           </div>
         </header>

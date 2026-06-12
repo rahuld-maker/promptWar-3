@@ -9,8 +9,10 @@
 
 body {
   margin: 0;
-  background-color: #030712; /* bg-gray-950 */
-  color: #f9fafb; /* text-gray-50 */
+  background-color: #030712;
+  /* bg-gray-950 */
+  color: #f9fafb;
+  /* text-gray-50 */
 }
 
 /* Custom Scrollbars */
@@ -18,21 +20,28 @@ body {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
-  background: #030712; /* bg-gray-950 */
+  background: #030712;
+  /* bg-gray-950 */
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #1f2937; /* bg-gray-800 */
+  background: #1f2937;
+  /* bg-gray-800 */
   border-radius: 9999px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: #10b981; /* bg-emerald-500 */
+  background: #10b981;
+  /* bg-emerald-500 */
 }
 
 /* Glow effects */
 .shadow-neon-emerald {
   box-shadow: 0 0 15px -3px rgba(16, 185, 129, 0.3), 0 0 6px -2px rgba(16, 185, 129, 0.1);
 }
+
 .shadow-neon-emerald-hover:hover {
   box-shadow: 0 0 25px -2px rgba(16, 185, 129, 0.5), 0 0 10px -2px rgba(16, 185, 129, 0.2);
 }

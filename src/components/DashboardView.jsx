@@ -5,13 +5,15 @@ import {
   Trash, ShoppingCart, Award, CheckCircle2, ChevronRight, TrendingUp
 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
+import AICoachCard from './AICoachCard';
 
 export default function DashboardView({ 
   userStats, 
   onLogAction, 
   activeScope, 
   setActiveScope, 
-  recentLogs 
+  recentLogs,
+  getIdToken
 }) {
   // Tracker and scope definitions
   const scopeData = {
@@ -1009,6 +1011,15 @@ export default function DashboardView({
               </div>
             ))}
           </div>
+        </div>
+
+        {/* 5. AI Sustainability Coach Card (Full width) */}
+        <div className="lg:col-span-12">
+          <AICoachCard
+            userStats={userStats}
+            recentLogs={recentLogs}
+            getIdToken={getIdToken}
+          />
         </div>
 
       </div>
