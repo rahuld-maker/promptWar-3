@@ -140,7 +140,7 @@ export default function AICoachCard({ userStats, recentLogs, getIdToken }) {
         recentLogs: recentLogs.slice(0, 5),
       };
 
-      const response = await fetch('http://localhost:5000/api/coach/tips', {
+      const response = await fetch('/api/coach/tips', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

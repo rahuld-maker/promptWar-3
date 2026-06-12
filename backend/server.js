@@ -8,10 +8,15 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { verifyToken } from './authMiddleware.js';
 import coachingRoutes from './routes/coachingRoutes.js';
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -126,6 +131,18 @@ app.post('/api/actions/log', verifyToken, (req, res) => {
 // Mount AI Coach routes at /api/coach
 app.use('/api/coach', coachingRoutes);
 
+// ─── Serve React Static Files ────────────────────────────────────────────────
+// Serve the compiled frontend build folder
+app.use(express.static(path.join(__dirname, '../dist')));
+
+// Fallback to React index.html for React Router routing (except for API requests)
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    return next();
+  }
+  res.sendFile(path.join(__dirname, '../dist/index.html'));
+});
+
 // ─── 404 Fallback ─────────────────────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({ error: 'Not Found', message: `Cannot ${req.method} ${req.originalUrl}` });
@@ -138,10 +155,10 @@ app.use((err, req, res, _next) => {
 });
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`==================================================`);
   console.log(`  Carbon Footprint Platform API v2.0              `);
-  console.log(`  Listening on: http://localhost:${PORT}           `);
-  console.log(`  Health:       http://localhost:${PORT}/api/health`);
+  console.log(`  Listening on: http://0.0.0.0:${PORT}            `);
+  console.log(`  Health:       http://0.0.0.0:${PORT}/api/health`);
   console.log(`==================================================`);
 });

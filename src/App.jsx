@@ -118,7 +118,7 @@ export default function App() {
         return;
       }
 
-      const response = await fetch('http://localhost:5000/api/actions/log', {
+      const response = await fetch('/api/actions/log', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
