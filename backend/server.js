@@ -28,18 +28,39 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173,ht
   .map((o) => o.trim());
 
 app.use(
-  cors({
-    origin: (origin, callback) => {
-      // In development, allow all localhost origins regardless of port
-      // (Vite picks dynamic ports when default port is busy)
-      if (!origin || origin.startsWith('http://localhost:') || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error(`CORS policy: Origin "${origin}" is not allowed.`));
+  cors((req, callback) => {
+    const origin = req.header('Origin');
+    const host = req.get('host');
+    let allowed = false;
+
+    if (!origin) {
+      allowed = true;
+    } else if (origin.startsWith('http://localhost:')) {
+      allowed = true;
+    } else if (allowedOrigins.includes(origin)) {
+      allowed = true;
+    } else {
+      try {
+        const originHost = new URL(origin).host;
+        if (originHost === host) {
+          allowed = true;
+        }
+      } catch (err) {
+        // Safe fallback for malformed URLs
       }
-    },
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    }
+
+    const corsOptions = {
+      origin: allowed,
+      methods: ['GET', 'POST', 'PUT', 'DELETE'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+    };
+
+    if (!allowed) {
+      console.warn(`[CORS Blocked] Origin "${origin}" does not match Host "${host}"`);
+    }
+
+    callback(null, corsOptions);
   })
 );
 
