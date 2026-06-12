@@ -45,7 +45,7 @@ export default function ChallengesView({
           <p className="text-sm text-gray-400">Join community goals and push your eco-friendly habits further.</p>
         </div>
         {/* Filters */}
-        <div className="flex bg-gray-900 border border-gray-800 p-1 rounded-2xl">
+        <div className="flex bg-gray-900 border border-gray-800 p-1 rounded-2xl" role="tablist" aria-label="Filter challenges by status">
           {[
             { id: 'all', label: 'All' },
             { id: 'joined', label: 'Joined' },
@@ -54,6 +54,8 @@ export default function ChallengesView({
           ].map((tab) => (
             <button
               key={tab.id}
+              role="tab"
+              aria-selected={filter === tab.id}
               onClick={() => setFilter(tab.id)}
               className={`px-4 py-1.5 text-xs font-semibold rounded-xl uppercase tracking-wider transition-all duration-200 ${
                 filter === tab.id 
@@ -93,7 +95,7 @@ export default function ChallengesView({
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <div className={`flex items-center gap-2 border px-3 py-1 rounded-xl text-[10px] font-bold uppercase tracking-wider ${style.bg} ${style.text}`}>
-                      <CatIcon className="w-3.5 h-3.5" />
+                      <CatIcon className="w-3.5 h-3.5" aria-hidden="true" />
                       <span>{challenge.category}</span>
                     </div>
                     {isCompleted ? (
@@ -136,7 +138,14 @@ export default function ChallengesView({
                         <span className="text-gray-400">Challenge Progress</span>
                         <span className="text-emerald-400">{challenge.progress}%</span>
                       </div>
-                      <div className="w-full h-2 bg-gray-900 rounded-full overflow-hidden border border-gray-850">
+                      <div
+                        role="progressbar"
+                        aria-valuenow={challenge.progress}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-label={`${challenge.title} progress: ${challenge.progress}%`}
+                        className="w-full h-2 bg-gray-900 rounded-full overflow-hidden border border-gray-850"
+                      >
                         <div 
                           className="h-full bg-emerald-500 rounded-full transition-all duration-500" 
                           style={{ width: `${challenge.progress}%` }}
@@ -147,11 +156,12 @@ export default function ChallengesView({
 
                   {isCompleted ? (
                     <div className="w-full text-center py-2.5 px-4 bg-emerald-950/20 border border-emerald-900/40 text-emerald-400 text-xs font-extrabold uppercase rounded-2xl tracking-wider">
-                      Completed & Points Claimed
+                      Completed &amp; Points Claimed
                     </div>
                   ) : challenge.joined ? (
                     <button
                       onClick={() => onLogChallengeProgress(challenge.id)}
+                      aria-label={`Log progress for ${challenge.title} challenge (+20%)`}
                       className="w-full py-2.5 px-4 bg-emerald-500 hover:bg-emerald-400 text-gray-950 text-xs font-black uppercase rounded-2xl tracking-wider transition shadow-neon-emerald cursor-pointer"
                     >
                       Log Progress (+20%)
@@ -159,6 +169,7 @@ export default function ChallengesView({
                   ) : (
                     <button
                       onClick={() => onJoinChallenge(challenge.id)}
+                      aria-label={`Join the ${challenge.title} challenge`}
                       className="w-full py-2.5 px-4 bg-gray-900 border border-gray-850 text-white hover:border-emerald-500/50 hover:text-emerald-400 text-xs font-extrabold uppercase rounded-2xl tracking-wider transition cursor-pointer"
                     >
                       Join Challenge
@@ -174,8 +185,8 @@ export default function ChallengesView({
       {/* Community Stats Footer */}
       <div className="bg-gray-900 border border-gray-800 rounded-3xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
-            <Users className="w-6 h-6 text-emerald-400" />
+          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center" aria-hidden="true">
+            <Users className="w-6 h-6 text-emerald-400" aria-hidden="true" />
           </div>
           <div>
             <h4 className="text-sm font-extrabold text-white">Community Engagement</h4>

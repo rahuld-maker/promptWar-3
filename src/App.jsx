@@ -306,43 +306,60 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 flex flex-col md:flex-row relative">
-      
-      {/* Toast popup */}
-      {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-gray-900 border border-emerald-500/50 px-5 py-3.5 rounded-2xl shadow-2xl shadow-emerald-500/10 flex items-center gap-3 animate-fade-in-up">
-          <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+
+      {/* Skip to main content – first focusable element for keyboard/screen-reader users */}
+      <a href="#main-content" className="skip-link">Skip to main content</a>
+
+      {/* Always-rendered aria-live region for toast announcements */}
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="fixed bottom-6 right-6 z-50"
+      >
+        {toastMessage && (
+          <div className="bg-gray-900 border border-emerald-500/50 px-5 py-3.5 rounded-2xl shadow-2xl shadow-emerald-500/10 flex items-center gap-3 animate-fade-in-up">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center" aria-hidden="true">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400" aria-hidden="true" />
+            </div>
+            <span className="text-xs font-bold text-white tracking-wide">{toastMessage}</span>
           </div>
-          <span className="text-xs font-bold text-white tracking-wide">{toastMessage}</span>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Mobile Header Bar */}
       <div className="md:hidden flex items-center justify-between px-5 py-4 bg-gray-900 border-b border-gray-850 z-30 shrink-0">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-center">
-            <Leaf className="w-5 h-5 text-emerald-400" />
+          <div className="w-9 h-9 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-center" aria-hidden="true">
+            <Leaf className="w-5 h-5 text-emerald-400" aria-hidden="true" />
           </div>
           <span className="font-extrabold text-base tracking-tight text-white">CoolEarth</span>
         </div>
-        <button 
+        <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
+          aria-expanded={sidebarOpen}
+          aria-controls="sidebar-nav"
+          aria-label={sidebarOpen ? 'Close navigation menu' : 'Open navigation menu'}
           className="w-10 h-10 rounded-xl bg-gray-950 border border-gray-800 flex items-center justify-center text-white"
         >
-          {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          {sidebarOpen ? <X className="w-5 h-5" aria-hidden="true" /> : <Menu className="w-5 h-5" aria-hidden="true" />}
         </button>
       </div>
 
       {/* 1. Left Sidebar (Fixed for Desktop) */}
-      <aside className={`
-        fixed md:sticky top-0 left-0 h-screen w-64 bg-gray-900 border-r border-gray-850 flex flex-col justify-between shrink-0 z-40 transition-transform duration-300 md:translate-x-0
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-      `}>
+      <aside
+        id="sidebar-nav"
+        aria-label="Application sidebar"
+        className={`
+          fixed md:sticky top-0 left-0 h-screen w-64 bg-gray-900 border-r border-gray-850 flex flex-col justify-between shrink-0 z-40 transition-transform duration-300 md:translate-x-0
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}
+      >
         {/* Brand Logo & Title */}
         <div className="p-6">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 bg-emerald-500/15 border border-emerald-500/40 rounded-2xl flex items-center justify-center shadow-neon-emerald">
-              <Leaf className="w-6 h-6 text-emerald-400" />
+            <div className="w-11 h-11 bg-emerald-500/15 border border-emerald-500/40 rounded-2xl flex items-center justify-center shadow-neon-emerald" aria-hidden="true">
+              <Leaf className="w-6 h-6 text-emerald-400" aria-hidden="true" />
             </div>
             <div>
               <span className="font-black text-lg tracking-tight text-white block">CoolEarth</span>
@@ -351,7 +368,7 @@ export default function App() {
           </div>
 
           {/* Navigation Menu */}
-          <nav className="mt-8 space-y-1.5">
+          <nav aria-label="Main navigation" className="mt-8 space-y-1.5">
             {[
               { id: 'home', label: 'Home (Dashboard)', icon: Home },
               { id: 'log', label: 'Log Action', icon: LogIn },
@@ -368,13 +385,14 @@ export default function App() {
                     setActiveTab(item.id);
                     setSidebarOpen(false);
                   }}
+                  aria-current={isActive ? 'page' : undefined}
                   className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl border text-xs font-bold tracking-wide uppercase transition-all duration-200 ${
                     isActive 
                       ? 'bg-emerald-500 text-gray-950 border-emerald-500 shadow-neon-emerald font-black' 
                       : 'bg-transparent border-transparent text-gray-400 hover:text-white hover:bg-gray-850/60'
                   }`}
                 >
-                  <Icon className="w-4 h-4 shrink-0" />
+                  <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
                   <span>{item.label}</span>
                 </button>
               );
@@ -384,64 +402,67 @@ export default function App() {
 
         {/* Footer Settings/Profile details & Logout */}
         <div className="p-6 border-t border-gray-850 space-y-3">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3" aria-label={`Signed in as ${userDisplayName}`}>
             <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-800 border-2 border-emerald-500/30 shrink-0">
-              <img src={userPhotoURL} alt="Avatar" className="w-full h-full object-cover" />
+              <img src={userPhotoURL} alt={`${userDisplayName}'s profile photo`} className="w-full h-full object-cover" />
             </div>
             <div className="overflow-hidden">
               <p className="text-xs font-bold text-white truncate">{userDisplayName}</p>
               <p className="text-[9px] text-gray-500 font-bold truncate uppercase tracking-wider">{userEmail}</p>
             </div>
           </div>
-          
-          <button 
+
+          <button
             onClick={logout}
+            aria-label="Sign out of CoolEarth"
             className="w-full py-2.5 px-3 bg-gray-950 border border-gray-850 hover:bg-rose-950/20 hover:border-rose-900/35 hover:text-rose-400 text-[10px] font-black uppercase tracking-wider rounded-xl transition flex items-center justify-center gap-2 cursor-pointer"
           >
-            <LogOut className="w-3.5 h-3.5" />
+            <LogOut className="w-3.5 h-3.5" aria-hidden="true" />
             <span>Sign Out</span>
           </button>
         </div>
       </aside>
 
       {/* Main Panel Area */}
-      <main className="flex-1 flex flex-col min-h-screen overflow-x-hidden">
-        
+      <main id="main-content" className="flex-1 flex flex-col min-h-screen overflow-x-hidden" tabIndex={-1}>
+
         {/* 2. Top Header */}
         <header className="sticky top-0 bg-gray-950/80 backdrop-blur-md border-b border-gray-900/50 py-3.5 px-6 flex items-center justify-between z-20 gap-4">
-          
+
           {/* Search bar */}
           <div className="relative max-w-md w-full md:block hidden">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" aria-hidden="true" />
+            <label htmlFor="global-search" className="sr-only">Search actions, challenges, and team mates</label>
             <input
-              type="text"
+              id="global-search"
+              type="search"
               placeholder="Search actions, challenges, team mates..."
               className="w-full bg-gray-900 border border-gray-800 rounded-2xl py-2 pl-10 pr-4 text-xs text-white focus:outline-none focus:border-emerald-500/50 placeholder-gray-550"
             />
           </div>
-          <div className="md:hidden"></div>
+          <div className="md:hidden" aria-hidden="true"></div>
 
           {/* User Metrics & Level Badge */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 bg-emerald-950/30 border border-emerald-900/40 py-1.5 px-3 rounded-2xl shrink-0">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <div className="flex items-center gap-1.5 bg-emerald-950/30 border border-emerald-900/40 py-1.5 px-3 rounded-2xl shrink-0" aria-label="User level: Guardian level 4">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" aria-hidden="true" />
               <span className="text-[10px] font-black uppercase text-emerald-400 tracking-wider">Level 4: Guardian</span>
             </div>
 
-            <div className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20 py-1.5 px-3.5 rounded-2xl shrink-0">
-              <Coins className="w-4 h-4 text-yellow-400" />
-              <span className="text-xs font-black text-yellow-400 tracking-wide">{userStats.coolPoints.toLocaleString()}</span>
-              <span className="text-[9px] uppercase font-bold text-yellow-500/70 tracking-widest hidden sm:inline">pts</span>
+            <div className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20 py-1.5 px-3.5 rounded-2xl shrink-0" aria-label={`${userStats.coolPoints.toLocaleString()} Cool Points`}>
+              <Coins className="w-4 h-4 text-yellow-400" aria-hidden="true" />
+              <span className="text-xs font-black text-yellow-400 tracking-wide" aria-hidden="true">{userStats.coolPoints.toLocaleString()}</span>
+              <span className="text-[9px] uppercase font-bold text-yellow-500/70 tracking-widest hidden sm:inline" aria-hidden="true">pts</span>
             </div>
 
-            <div className="w-9 h-9 rounded-full overflow-hidden border border-gray-800 shrink-0 bg-gray-800 cursor-pointer hover:border-emerald-500/40 transition">
-              <img src={userPhotoURL} alt="Avatar" className="w-full h-full object-cover" />
+            <div className="w-9 h-9 rounded-full overflow-hidden border border-gray-800 shrink-0 bg-gray-800 hover:border-emerald-500/40 transition">
+              <img src={userPhotoURL} alt={`${userDisplayName}'s profile photo`} className="w-full h-full object-cover" />
             </div>
           </div>
         </header>
 
         {/* 3. Main Content Area */}
-        <section className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto">
+        <section aria-label="Page content" className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto">
           {renderView()}
         </section>
       </main>

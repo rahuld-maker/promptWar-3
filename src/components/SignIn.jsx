@@ -31,17 +31,17 @@ export default function SignIn() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      
+    <main aria-label="Sign in to CoolEarth" className="min-h-screen bg-gray-950 flex flex-col items-center justify-center p-6 relative overflow-hidden">
+
       {/* Background glow graphics */}
-      <div className="absolute -top-40 -left-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-emerald-600/5 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute -top-40 -left-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true"></div>
+      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-emerald-600/5 rounded-full blur-3xl pointer-events-none" aria-hidden="true"></div>
 
       <div className="w-full max-w-md bg-gray-900 border border-gray-850 rounded-3xl p-8 text-center shadow-2xl relative z-10">
         
         {/* Brand Icon */}
-        <div className="mx-auto w-16 h-16 bg-emerald-500/15 border-2 border-emerald-500/30 rounded-2xl flex items-center justify-center shadow-neon-emerald mb-6">
-          <Leaf className="w-9 h-9 text-emerald-400" />
+        <div className="mx-auto w-16 h-16 bg-emerald-500/15 border-2 border-emerald-500/30 rounded-2xl flex items-center justify-center shadow-neon-emerald mb-6" aria-hidden="true">
+          <Leaf className="w-9 h-9 text-emerald-400" aria-hidden="true" />
         </div>
 
         {/* Text Details */}
@@ -54,8 +54,12 @@ export default function SignIn() {
 
         {/* Preview Mode Notification */}
         {!auth && (
-          <div className="mb-6 p-4 bg-amber-950/20 border border-amber-900/40 rounded-2xl text-left flex items-start gap-3">
-            <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+          <div
+            role="note"
+            aria-live="polite"
+            className="mb-6 p-4 bg-amber-950/20 border border-amber-900/40 rounded-2xl text-left flex items-start gap-3"
+          >
+            <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" aria-hidden="true" />
             <div>
               <p className="text-xs font-bold text-amber-300">Preview Mode Active</p>
               <p className="text-[11px] text-amber-450/80 leading-relaxed mt-0.5">
@@ -67,8 +71,12 @@ export default function SignIn() {
 
         {/* Error Notification */}
         {error && (
-          <div className="mb-6 p-4 bg-rose-950/20 border border-rose-900/40 rounded-2xl text-left flex items-start gap-3 animate-fade-in">
-            <ShieldAlert className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="mb-6 p-4 bg-rose-950/20 border border-rose-900/40 rounded-2xl text-left flex items-start gap-3 animate-fade-in"
+          >
+            <ShieldAlert className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" aria-hidden="true" />
             <p className="text-xs text-rose-300 font-medium leading-relaxed">{error}</p>
           </div>
         )}
@@ -78,6 +86,8 @@ export default function SignIn() {
         <button
           onClick={handleSignIn}
           disabled={loading}
+          aria-label="Sign in with Google"
+          aria-busy={loading}
           className={`w-full py-4 px-6 rounded-2xl border flex items-center justify-center gap-3 text-sm font-bold tracking-wide uppercase transition-all duration-300 ${
             loading 
               ? 'bg-gray-850 border-gray-800 text-gray-500 cursor-wait' 
@@ -86,7 +96,7 @@ export default function SignIn() {
         >
           {loading ? (
             <div className="flex items-center gap-2">
-              <svg className="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <svg className="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
@@ -95,7 +105,7 @@ export default function SignIn() {
           ) : (
             <>
               {/* SVG Google Logo */}
-              <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                 <path
                   fill="#4285F4"
                   d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v3.92h6.69a5.74 5.74 0 01-2.5 3.77v3.13h4.05c2.37-2.18 3.73-5.39 3.73-8.75z"
@@ -123,7 +133,6 @@ export default function SignIn() {
             SECURED THROUGH FIREBASE GOOGLE OAUTH
           </p>
         </div>
-      </div>
-    </div>
+      </main>
   );
 }
