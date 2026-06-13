@@ -162,7 +162,7 @@ export default function LogActionView({
           <div className="bg-gray-900 border border-gray-800 rounded-2xl py-2 px-4 text-center">
             <span className="text-[10px] uppercase font-bold text-gray-400">Total Points</span>
             <p className="text-xl font-bold text-yellow-400 flex items-center gap-1">
-              <Coins className="w-4 h-4" />
+              <Coins className="w-4 h-4" aria-hidden="true" />
               {userStats.coolPoints}
             </p>
           </div>
@@ -176,7 +176,7 @@ export default function LogActionView({
             <h3 className="text-lg font-bold text-white tracking-wide mb-4">Emissions Savings Calculator</h3>
             
             {/* Horizontal selector grid */}
-            <div className="grid grid-cols-5 gap-2 mb-6">
+            <div className="grid grid-cols-5 gap-2 mb-6" role="tablist" aria-label="Select category to log">
               {[
                 { id: 'travel', label: 'Travel', icon: Bus },
                 { id: 'energy', label: 'Energy', icon: Zap },
@@ -189,6 +189,9 @@ export default function LogActionView({
                 return (
                   <button
                     key={cat.id}
+                    role="tab"
+                    aria-selected={isActive}
+                    aria-controls={`tabpanel-${cat.id}`}
                     onClick={() => setActiveCategory(cat.id)}
                     className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition-all duration-200 ${
                       isActive 
@@ -196,7 +199,7 @@ export default function LogActionView({
                         : 'bg-gray-950/50 border-gray-800 text-gray-400 hover:border-gray-700 hover:text-white'
                     }`}
                   >
-                    <Icon className="w-5 h-5 mb-1.5" />
+                    <Icon className="w-5 h-5 mb-1.5" aria-hidden="true" />
                     <span className="text-[10px] font-bold tracking-wider uppercase">{cat.label}</span>
                   </button>
                 );
@@ -204,12 +207,17 @@ export default function LogActionView({
             </div>
 
             {/* Custom Inputs per Category */}
-            <div className="bg-gray-950 border border-gray-850 rounded-2xl p-5 space-y-5">
+            <div 
+              role="tabpanel" 
+              id={`tabpanel-${activeCategory}`} 
+              aria-label={`${activeCategory} calculator`}
+              className="bg-gray-950 border border-gray-850 rounded-2xl p-5 space-y-5"
+            >
               {activeCategory === 'travel' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">I travelled by:</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <span id="travel-by-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">I travelled by:</span>
+                    <div role="group" aria-labelledby="travel-by-label" className="grid grid-cols-3 gap-2">
                       {['bicycle', 'bus', 'train'].map((mode) => (
                         <button
                           key={mode}
@@ -225,17 +233,17 @@ export default function LogActionView({
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Distance:</label>
-                    <div className="flex items-center gap-3">
-                      <button onClick={() => setTravelDistance(d => Math.max(1, d - 1))} className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold flex items-center justify-center">-</button>
+                    <span id="travel-distance-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Distance:</span>
+                    <div role="group" aria-labelledby="travel-distance-label" className="flex items-center gap-3">
+                      <button onClick={() => setTravelDistance(d => Math.max(1, d - 1))} aria-label="Decrease travel distance" className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold flex items-center justify-center">-</button>
                       <div className="flex-1 bg-gray-900 border border-gray-800 rounded-xl py-2 px-4 text-center font-bold text-white">{travelDistance} km</div>
-                      <button onClick={() => setTravelDistance(d => d + 1)} className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold flex items-center justify-center">+</button>
+                      <button onClick={() => setTravelDistance(d => d + 1)} aria-label="Increase travel distance" className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold flex items-center justify-center">+</button>
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Instead of:</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <span id="travel-instead-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Instead of:</span>
+                    <div role="group" aria-labelledby="travel-instead-label" className="grid grid-cols-3 gap-2">
                       {['car', 'flight', 'rickshaw'].map((mode) => (
                         <button
                           key={mode}
@@ -255,8 +263,8 @@ export default function LogActionView({
               {activeCategory === 'energy' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">I used:</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <span id="energy-by-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">I used:</span>
+                    <div role="group" aria-labelledby="energy-by-label" className="grid grid-cols-3 gap-2">
                       {['solar', 'led', 'fan'].map((mode) => (
                         <button
                           key={mode}
@@ -272,17 +280,17 @@ export default function LogActionView({
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Hours:</label>
-                    <div className="flex items-center gap-3">
-                      <button onClick={() => setEnergyHours(h => Math.max(1, h - 1))} className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold flex items-center justify-center">-</button>
+                    <span id="energy-hours-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Hours:</span>
+                    <div role="group" aria-labelledby="energy-hours-label" className="flex items-center gap-3">
+                      <button onClick={() => setEnergyHours(h => Math.max(1, h - 1))} aria-label="Decrease energy hours" className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold flex items-center justify-center">-</button>
                       <div className="flex-1 bg-gray-900 border border-gray-800 rounded-xl py-2 px-4 text-center font-bold text-white">{energyHours} hours</div>
-                      <button onClick={() => setEnergyHours(h => h + 1)} className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold flex items-center justify-center">+</button>
+                      <button onClick={() => setEnergyHours(h => h + 1)} aria-label="Increase energy hours" className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold flex items-center justify-center">+</button>
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Instead of:</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <span id="energy-instead-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Instead of:</span>
+                    <div role="group" aria-labelledby="energy-instead-label" className="grid grid-cols-3 gap-2">
                       {['grid', 'incandescent', 'ac'].map((mode) => (
                         <button
                           key={mode}
@@ -302,8 +310,8 @@ export default function LogActionView({
               {activeCategory === 'food' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">I ate:</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <span id="food-by-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">I ate:</span>
+                    <div role="group" aria-labelledby="food-by-label" className="grid grid-cols-3 gap-2">
                       {['plant', 'local', 'organic'].map((mode) => (
                         <button
                           key={mode}
@@ -319,17 +327,17 @@ export default function LogActionView({
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Portions:</label>
-                    <div className="flex items-center gap-3">
-                      <button onClick={() => setFoodPortions(p => Math.max(1, p - 1))} className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold flex items-center justify-center">-</button>
+                    <span id="food-portions-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Portions:</span>
+                    <div role="group" aria-labelledby="food-portions-label" className="flex items-center gap-3">
+                      <button onClick={() => setFoodPortions(p => Math.max(1, p - 1))} aria-label="Decrease food portions" className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold flex items-center justify-center">-</button>
                       <div className="flex-1 bg-gray-900 border border-gray-800 rounded-xl py-2 px-4 text-center font-bold text-white">{foodPortions} portions</div>
-                      <button onClick={() => setFoodPortions(p => p + 1)} className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold flex items-center justify-center">+</button>
+                      <button onClick={() => setFoodPortions(p => p + 1)} aria-label="Increase food portions" className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold flex items-center justify-center">+</button>
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Instead of:</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <span id="food-instead-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Instead of:</span>
+                    <div role="group" aria-labelledby="food-instead-label" className="grid grid-cols-3 gap-2">
                       {['beef', 'imported', 'fastfood'].map((mode) => (
                         <button
                           key={mode}
@@ -349,8 +357,8 @@ export default function LogActionView({
               {activeCategory === 'waste' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">I did:</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <span id="waste-by-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">I did:</span>
+                    <div role="group" aria-labelledby="waste-by-label" className="grid grid-cols-3 gap-2">
                       {['composting', 'recycling', 'ewaste'].map((mode) => (
                         <button
                           key={mode}
@@ -366,17 +374,17 @@ export default function LogActionView({
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Weight:</label>
-                    <div className="flex items-center gap-3">
-                      <button onClick={() => setWasteWeight(w => Math.max(1, w - 1))} className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold flex items-center justify-center">-</button>
+                    <span id="waste-weight-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Weight:</span>
+                    <div role="group" aria-labelledby="waste-weight-label" className="flex items-center gap-3">
+                      <button onClick={() => setWasteWeight(w => Math.max(1, w - 1))} aria-label="Decrease waste weight" className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold flex items-center justify-center">-</button>
                       <div className="flex-1 bg-gray-900 border border-gray-800 rounded-xl py-2 px-4 text-center font-bold text-white">{wasteWeight} kg</div>
-                      <button onClick={() => setWasteWeight(w => w + 1)} className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold flex items-center justify-center">+</button>
+                      <button onClick={() => setWasteWeight(w => w + 1)} aria-label="Increase waste weight" className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold flex items-center justify-center">+</button>
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Instead of:</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <span id="waste-instead-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Instead of:</span>
+                    <div role="group" aria-labelledby="waste-instead-label" className="grid grid-cols-3 gap-2">
                       {['landfill', 'burning', 'plastic'].map((mode) => (
                         <button
                           key={mode}
@@ -396,8 +404,8 @@ export default function LogActionView({
               {activeCategory === 'shopping' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">I bought:</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <span id="shopping-by-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">I bought:</span>
+                    <div role="group" aria-labelledby="shopping-by-label" className="grid grid-cols-3 gap-2">
                       {['secondhand', 'reusable', 'refill'].map((mode) => (
                         <button
                           key={mode}
@@ -413,17 +421,17 @@ export default function LogActionView({
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Quantity:</label>
-                    <div className="flex items-center gap-3">
-                      <button onClick={() => setShoppingItems(i => Math.max(1, i - 1))} className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold flex items-center justify-center">-</button>
+                    <span id="shopping-items-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Quantity:</span>
+                    <div role="group" aria-labelledby="shopping-items-label" className="flex items-center gap-3">
+                      <button onClick={() => setShoppingItems(i => Math.max(1, i - 1))} aria-label="Decrease shopping items quantity" className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold flex items-center justify-center">-</button>
                       <div className="flex-1 bg-gray-900 border border-gray-800 rounded-xl py-2 px-4 text-center font-bold text-white">{shoppingItems} items</div>
-                      <button onClick={() => setShoppingItems(i => i + 1)} className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold flex items-center justify-center">+</button>
+                      <button onClick={() => setShoppingItems(i => i + 1)} aria-label="Increase shopping items quantity" className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold flex items-center justify-center">+</button>
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Instead of:</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <span id="shopping-instead-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Instead of:</span>
+                    <div role="group" aria-labelledby="shopping-instead-label" className="grid grid-cols-3 gap-2">
                       {['fastfashion', 'plasticbag', 'container'].map((mode) => (
                         <button
                           key={mode}
@@ -451,7 +459,7 @@ export default function LogActionView({
               <div className="text-right">
                 <p className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Points</p>
                 <p className="text-lg font-bold text-yellow-400 flex items-center gap-1 justify-end">
-                  <Coins className="w-4 h-4" />
+                  <Coins className="w-4 h-4" aria-hidden="true" />
                   <span>+{currentCoolPoints}</span>
                 </p>
               </div>
@@ -459,6 +467,7 @@ export default function LogActionView({
             <button
               onClick={handleLogActionSubmit}
               disabled={currentSavings <= 0}
+              aria-label={`Log ${activeCategory} action: save ${currentSavings} kg CO2eq`}
               className={`px-8 py-4 rounded-2xl text-sm font-bold tracking-wide uppercase transition-all duration-300 shrink-0 select-none ${
                 currentSavings > 0 
                   ? 'bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black cursor-pointer shadow-neon-emerald active:scale-95' 
@@ -475,7 +484,7 @@ export default function LogActionView({
           <div>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-white tracking-wide flex items-center gap-2">
-                <History className="w-5 h-5 text-emerald-400" />
+                <History className="w-5 h-5 text-emerald-400" aria-hidden="true" />
                 Action History
               </h3>
               <span className="text-xs text-gray-400 font-semibold">{recentLogs.length} logged actions</span>
@@ -483,8 +492,10 @@ export default function LogActionView({
 
             {/* Search Bar */}
             <div className="relative mb-4">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" aria-hidden="true" />
+              <label htmlFor="history-search" className="sr-only">Search logged actions</label>
               <input
+                id="history-search"
                 type="text"
                 placeholder="Search logged habits..."
                 value={searchQuery}
@@ -497,7 +508,7 @@ export default function LogActionView({
             <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
               {filteredLogs.length === 0 ? (
                 <div className="text-center py-12 bg-gray-950/40 border border-gray-800/80 rounded-2xl">
-                  <History className="w-8 h-8 text-gray-600 mx-auto mb-2" />
+                  <History className="w-8 h-8 text-gray-600 mx-auto mb-2" aria-hidden="true" />
                   <p className="text-sm font-semibold text-gray-400">No actions found</p>
                   <p className="text-xs text-gray-500 mt-1">Start by logging a carbon saving option on the left.</p>
                 </div>
@@ -511,7 +522,7 @@ export default function LogActionView({
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 flex items-center justify-center shrink-0">
-                          <LogIcon className="w-5 h-5 text-emerald-400" />
+                          <LogIcon className="w-5 h-5 text-emerald-400" aria-hidden="true" />
                         </div>
                         <div>
                           <p className="text-xs font-semibold text-gray-200 line-clamp-1">{log.description}</p>
@@ -519,7 +530,7 @@ export default function LogActionView({
                             <span className="capitalize text-emerald-400 font-bold">{log.category}</span>
                             <span>•</span>
                             <span className="flex items-center gap-0.5">
-                              <Calendar className="w-2.5 h-2.5" />
+                              <Calendar className="w-2.5 h-2.5" aria-hidden="true" />
                               {log.date}
                             </span>
                           </div>
@@ -535,9 +546,9 @@ export default function LogActionView({
                           <button
                             onClick={() => onDeleteLog(log.id)}
                             className="w-8 h-8 rounded-lg bg-gray-900 border border-gray-800 hover:bg-rose-950/50 hover:border-rose-900/40 text-gray-500 hover:text-rose-400 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200"
-                            title="Delete log"
+                            aria-label={`Remove log: ${log.description}`}
                           >
-                            <Trash className="w-3.5 h-3.5" />
+                            <Trash className="w-3.5 h-3.5" aria-hidden="true" />
                           </button>
                         )}
                       </div>

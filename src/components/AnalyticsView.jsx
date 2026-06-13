@@ -41,9 +41,10 @@ export default function AnalyticsView({ userStats }) {
           <h1 className="text-2xl font-bold text-white tracking-tight my-0">Savings Analytics</h1>
           <p className="text-sm text-gray-400">Detailed visualizations of your progress and lifestyle carbon reduction trend.</p>
         </div>
-        <div className="flex bg-gray-900 border border-gray-800 p-1 rounded-2xl">
+        <div className="flex bg-gray-900 border border-gray-800 p-1 rounded-2xl" role="group" aria-label="Timeframe selector">
           <button
             onClick={() => setTimeframe('weekly')}
+            aria-pressed={timeframe === 'weekly'}
             className={`px-4 py-1.5 text-xs font-semibold rounded-xl uppercase tracking-wider transition-all duration-200 ${
               timeframe === 'weekly' ? 'text-gray-950 bg-emerald-400 font-bold' : 'text-gray-400 hover:text-white'
             }`}
@@ -52,6 +53,7 @@ export default function AnalyticsView({ userStats }) {
           </button>
           <button
             onClick={() => setTimeframe('monthly')}
+            aria-pressed={timeframe === 'monthly'}
             className={`px-4 py-1.5 text-xs font-semibold rounded-xl uppercase tracking-wider transition-all duration-200 ${
               timeframe === 'monthly' ? 'text-gray-950 bg-emerald-400 font-bold' : 'text-gray-400 hover:text-white'
             }`}
@@ -67,7 +69,7 @@ export default function AnalyticsView({ userStats }) {
           <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Total CO2 Savings</p>
           <h3 className="text-2xl font-black text-white mt-1">{totalCO2Saved.toFixed(2)} kg</h3>
           <p className="text-xs text-emerald-400 font-semibold mt-2 flex items-center gap-1">
-            <TrendingUp className="w-3.5 h-3.5" />
+            <TrendingUp className="w-3.5 h-3.5" aria-hidden="true" />
             <span>Top 5% of active users</span>
           </p>
         </div>
@@ -90,11 +92,11 @@ export default function AnalyticsView({ userStats }) {
         <div className="lg:col-span-7 bg-gray-900 border border-gray-800 rounded-3xl p-6 hover:border-gray-750 transition-all duration-300">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-base font-extrabold text-white tracking-wide flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-emerald-400" />
+              <BarChart3 className="w-4 h-4 text-emerald-400" aria-hidden="true" />
               Savings Trend
             </h3>
             <span className="text-xs text-gray-400 flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5" />
+              <Calendar className="w-3.5 h-3.5" aria-hidden="true" />
               Last 7 Days
             </span>
           </div>
@@ -126,7 +128,7 @@ export default function AnalyticsView({ userStats }) {
         <div className="lg:col-span-5 bg-gray-900 border border-gray-800 rounded-3xl p-6 hover:border-gray-750 transition-all duration-300 flex flex-col justify-between">
           <div>
             <h3 className="text-base font-extrabold text-white tracking-wide flex items-center gap-2 mb-6">
-              <PieIcon className="w-4 h-4 text-emerald-400" />
+              <PieIcon className="w-4 h-4 text-emerald-400" aria-hidden="true" />
               Category Breakdown
             </h3>
 
@@ -174,7 +176,7 @@ export default function AnalyticsView({ userStats }) {
         <div className="lg:col-span-12 bg-gray-900 border border-gray-800 rounded-3xl p-6 hover:border-gray-750 transition-all duration-300">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-base font-extrabold text-white tracking-wide flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-emerald-400" />
+              <BarChart3 className="w-4 h-4 text-emerald-400" aria-hidden="true" />
               Daily Comparison vs Target (4.5 kg Goal)
             </h3>
           </div>

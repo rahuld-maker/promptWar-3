@@ -203,9 +203,10 @@ export default function DashboardView({
                 {currentScopeStats.label}
               </h2>
               {/* Target Tracker Scope Toggle */}
-              <div className="relative flex bg-gray-950 p-1 rounded-xl border border-gray-800 self-start">
+              <div className="relative flex bg-gray-950 p-1 rounded-xl border border-gray-800 self-start" role="group" aria-label="View scope">
                 <button
                   onClick={() => setActiveScope('personal')}
+                  aria-pressed={activeScope === 'personal'}
                   className={`relative z-10 px-3 py-1 text-xs font-medium rounded-lg transition-all duration-200 ${
                     activeScope === 'personal' ? 'text-gray-950 bg-emerald-400 font-semibold' : 'text-gray-400 hover:text-white'
                   }`}
@@ -214,6 +215,7 @@ export default function DashboardView({
                 </button>
                 <button
                   onClick={() => setActiveScope('sagecorp')}
+                  aria-pressed={activeScope === 'sagecorp'}
                   className={`relative z-10 px-3 py-1 text-xs font-medium rounded-lg transition-all duration-200 ${
                     activeScope === 'sagecorp' ? 'text-gray-950 bg-emerald-400 font-semibold' : 'text-gray-400 hover:text-white'
                   }`}
@@ -222,6 +224,7 @@ export default function DashboardView({
                 </button>
                 <button
                   onClick={() => setActiveScope('global')}
+                  aria-pressed={activeScope === 'global'}
                   className={`relative z-10 px-3 py-1 text-xs font-medium rounded-lg transition-all duration-200 ${
                     activeScope === 'global' ? 'text-gray-950 bg-emerald-400 font-semibold' : 'text-gray-400 hover:text-white'
                   }`}
@@ -246,7 +249,7 @@ export default function DashboardView({
             </div>
 
             <div className="p-3 bg-emerald-950/20 border border-emerald-900/40 rounded-2xl flex items-center gap-3">
-              <Leaf className="w-5 h-5 text-emerald-400 shrink-0" />
+              <Leaf className="w-5 h-5 text-emerald-400 shrink-0" aria-hidden="true" />
               <p className="text-emerald-300 text-sm font-medium">
                 {currentScopeStats.treesSnippet}
               </p>
@@ -301,12 +304,16 @@ export default function DashboardView({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
         {/* 2. "Log Action" Interactive Widget (Col span 7) */}
-        <div className="lg:col-span-7 bg-gray-900 border border-gray-800 rounded-3xl p-6 flex flex-col justify-between hover:border-gray-700/80 transition-all duration-300 relative">
+        <div className="lg:col-span-7 bg-gray-900 border border-gray-800 rounded-3xl p-6 flex flex-col justify-between hover:border-gray-750 transition-all duration-300 relative">
           
           {showLogSuccess && (
-            <div className="absolute inset-x-6 top-6 bg-emerald-500 text-gray-950 p-4 rounded-2xl flex items-center justify-between shadow-lg z-20 animate-bounce">
+            <div 
+              role="status"
+              aria-live="polite"
+              className="absolute inset-x-6 top-6 bg-emerald-500 text-gray-950 p-4 rounded-2xl flex items-center justify-between shadow-lg z-20 animate-bounce"
+            >
               <div className="flex items-center gap-3">
-                <CheckCircle2 className="w-6 h-6 shrink-0" />
+                <CheckCircle2 className="w-6 h-6 shrink-0" aria-hidden="true" />
                 <div>
                   <p className="font-bold">Action Logged Successfully!</p>
                   <p className="text-xs font-medium opacity-90">Saved {lastSavedAmount} kg CO2eq and earned +{Math.round(lastSavedAmount * 10)} Cool Points.</p>
@@ -330,7 +337,7 @@ export default function DashboardView({
             </div>
 
             {/* Category Button Grid */}
-            <div className="grid grid-cols-5 gap-2 mb-6">
+            <div className="grid grid-cols-5 gap-2 mb-6" role="tablist" aria-label="Select category to log">
               {[
                 { id: 'travel', label: 'Travel', icon: Bus },
                 { id: 'energy', label: 'Energy', icon: Zap },
@@ -343,6 +350,9 @@ export default function DashboardView({
                 return (
                   <button
                     key={cat.id}
+                    role="tab"
+                    aria-selected={isActive}
+                    aria-controls={`quickpanel-${cat.id}`}
                     onClick={() => setActiveCategory(cat.id)}
                     className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition-all duration-200 ${
                       isActive 
@@ -350,7 +360,7 @@ export default function DashboardView({
                         : 'bg-gray-950/50 border-gray-800 text-gray-400 hover:border-gray-700 hover:text-white'
                     }`}
                   >
-                    <Icon className={`w-5 h-5 mb-1.5 ${isActive ? 'scale-110' : ''}`} />
+                    <Icon className={`w-5 h-5 mb-1.5 ${isActive ? 'scale-110' : ''}`} aria-hidden="true" />
                     <span className="text-[10px] font-semibold tracking-wider uppercase">{cat.label}</span>
                   </button>
                 );
@@ -358,15 +368,20 @@ export default function DashboardView({
             </div>
 
             {/* Selected Category Comparison Engine Form */}
-            <div className="bg-gray-950/60 border border-gray-800/80 rounded-2xl p-5 space-y-5">
+            <div 
+              role="tabpanel"
+              id={`quickpanel-${activeCategory}`}
+              aria-label={`${activeCategory} calculator`}
+              className="bg-gray-950/60 border border-gray-800/80 rounded-2xl p-5 space-y-5"
+            >
               
               {/* TRAVEL FORM */}
               {activeCategory === 'travel' && (
                 <div className="space-y-4">
                   {/* I Travelled By */}
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">I travelled by:</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <span id="quick-travel-by-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">I travelled by:</span>
+                    <div role="group" aria-labelledby="quick-travel-by-label" className="grid grid-cols-3 gap-2">
                       {[
                         { id: 'bicycle', label: 'Bicycle', icon: Bike },
                         { id: 'bus', label: 'Bus', icon: Bus },
@@ -381,7 +396,7 @@ export default function DashboardView({
                               : 'bg-gray-900 border-gray-800 text-gray-300 hover:border-gray-700'
                           }`}
                         >
-                          <item.icon className="w-3.5 h-3.5" />
+                          <item.icon className="w-3.5 h-3.5" aria-hidden="true" />
                           {item.label}
                         </button>
                       ))}
@@ -390,22 +405,24 @@ export default function DashboardView({
 
                   {/* Distance (km) */}
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Distance:</label>
-                    <div className="flex items-center gap-3">
+                    <span id="quick-travel-distance-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Distance:</span>
+                    <div role="group" aria-labelledby="quick-travel-distance-label" className="flex items-center gap-3">
                       <button 
                         onClick={() => setTravelDistance(d => Math.max(1, d - 1))}
+                        aria-label="Decrease travel distance"
                         className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold text-lg flex items-center justify-center transition"
                       >
-                        <Minus className="w-4 h-4" />
+                        <Minus className="w-4 h-4" aria-hidden="true" />
                       </button>
                       <div className="flex-1 bg-gray-900 border border-gray-800 rounded-xl py-2 px-4 text-center font-bold text-white">
                         {travelDistance} <span className="text-gray-400 font-medium text-xs">km</span>
                       </div>
                       <button 
                         onClick={() => setTravelDistance(d => d + 1)}
+                        aria-label="Increase travel distance"
                         className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold text-lg flex items-center justify-center transition"
                       >
-                        <Plus className="w-4 h-4" />
+                        <Plus className="w-4 h-4" aria-hidden="true" />
                       </button>
                     </div>
                     {/* Range slider for fluid input */}
@@ -414,6 +431,7 @@ export default function DashboardView({
                       min="1" 
                       max="100" 
                       value={travelDistance}
+                      aria-label="Travel distance slider"
                       onChange={(e) => setTravelDistance(parseInt(e.target.value))}
                       className="w-full accent-emerald-400 bg-gray-900 rounded-lg appearance-none h-1 cursor-pointer mt-4" 
                     />
@@ -421,8 +439,8 @@ export default function DashboardView({
 
                   {/* Instead Of */}
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Instead of:</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <span id="quick-travel-instead-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Instead of:</span>
+                    <div role="group" aria-labelledby="quick-travel-instead-label" className="grid grid-cols-3 gap-2">
                       {[
                         { id: 'car', label: 'Car', icon: Car },
                         { id: 'flight', label: 'Flight', icon: Plane },
@@ -437,7 +455,7 @@ export default function DashboardView({
                               : 'bg-gray-900 border-gray-800 text-gray-300 hover:border-gray-700'
                           }`}
                         >
-                          <item.icon className="w-3.5 h-3.5" />
+                          <item.icon className="w-3.5 h-3.5" aria-hidden="true" />
                           {item.label}
                         </button>
                       ))}
@@ -450,8 +468,8 @@ export default function DashboardView({
               {activeCategory === 'energy' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">I used:</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <span id="quick-energy-by-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">I used:</span>
+                    <div role="group" aria-labelledby="quick-energy-by-label" className="grid grid-cols-3 gap-2">
                       {[
                         { id: 'solar', label: 'Solar Power' },
                         { id: 'led', label: 'LED Bulbs' },
@@ -473,22 +491,24 @@ export default function DashboardView({
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Duration:</label>
-                    <div className="flex items-center gap-3">
+                    <span id="quick-energy-hours-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Duration:</span>
+                    <div role="group" aria-labelledby="quick-energy-hours-label" className="flex items-center gap-3">
                       <button 
                         onClick={() => setEnergyHours(h => Math.max(1, h - 1))}
+                        aria-label="Decrease energy hours"
                         className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold text-lg flex items-center justify-center transition"
                       >
-                        <Minus className="w-4 h-4" />
+                        <Minus className="w-4 h-4" aria-hidden="true" />
                       </button>
                       <div className="flex-1 bg-gray-900 border border-gray-800 rounded-xl py-2 px-4 text-center font-bold text-white">
                         {energyHours} <span className="text-gray-400 font-medium text-xs">hours</span>
                       </div>
                       <button 
                         onClick={() => setEnergyHours(h => h + 1)}
+                        aria-label="Increase energy hours"
                         className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold text-lg flex items-center justify-center transition"
                       >
-                        <Plus className="w-4 h-4" />
+                        <Plus className="w-4 h-4" aria-hidden="true" />
                       </button>
                     </div>
                     <input 
@@ -496,14 +516,15 @@ export default function DashboardView({
                       min="1" 
                       max="24" 
                       value={energyHours}
+                      aria-label="Energy hours slider"
                       onChange={(e) => setEnergyHours(parseInt(e.target.value))}
                       className="w-full accent-emerald-400 bg-gray-900 rounded-lg appearance-none h-1 cursor-pointer mt-4" 
                     />
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Instead of:</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <span id="quick-energy-instead-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Instead of:</span>
+                    <div role="group" aria-labelledby="quick-energy-instead-label" className="grid grid-cols-3 gap-2">
                       {[
                         { id: 'grid', label: 'Grid Power' },
                         { id: 'incandescent', label: 'Incandescent' },
@@ -530,8 +551,8 @@ export default function DashboardView({
               {activeCategory === 'food' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">I ate:</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <span id="quick-food-by-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">I ate:</span>
+                    <div role="group" aria-labelledby="quick-food-by-label" className="grid grid-cols-3 gap-2">
                       {[
                         { id: 'plant', label: 'Plant-Based' },
                         { id: 'local', label: 'Local Produce' },
@@ -553,29 +574,31 @@ export default function DashboardView({
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Quantity:</label>
-                    <div className="flex items-center gap-3">
+                    <span id="quick-food-portions-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Quantity:</span>
+                    <div role="group" aria-labelledby="quick-food-portions-label" className="flex items-center gap-3">
                       <button 
                         onClick={() => setFoodPortions(p => Math.max(1, p - 1))}
+                        aria-label="Decrease food portions"
                         className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold text-lg flex items-center justify-center transition"
                       >
-                        <Minus className="w-4 h-4" />
+                        <Minus className="w-4 h-4" aria-hidden="true" />
                       </button>
                       <div className="flex-1 bg-gray-900 border border-gray-800 rounded-xl py-2 px-4 text-center font-bold text-white">
                         {foodPortions} <span className="text-gray-400 font-medium text-xs">portions</span>
                       </div>
                       <button 
                         onClick={() => setFoodPortions(p => p + 1)}
+                        aria-label="Increase food portions"
                         className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold text-lg flex items-center justify-center transition"
                       >
-                        <Plus className="w-4 h-4" />
+                        <Plus className="w-4 h-4" aria-hidden="true" />
                       </button>
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Instead of:</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <span id="quick-food-instead-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Instead of:</span>
+                    <div role="group" aria-labelledby="quick-food-instead-label" className="grid grid-cols-3 gap-2">
                       {[
                         { id: 'beef', label: 'Beef / Red Meat' },
                         { id: 'imported', label: 'Imported Meal' },
@@ -602,8 +625,8 @@ export default function DashboardView({
               {activeCategory === 'waste' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">I did:</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <span id="quick-waste-by-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">I did:</span>
+                    <div role="group" aria-labelledby="quick-waste-by-label" className="grid grid-cols-3 gap-2">
                       {[
                         { id: 'composting', label: 'Composting' },
                         { id: 'recycling', label: 'Recycling' },
@@ -625,29 +648,31 @@ export default function DashboardView({
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Weight:</label>
-                    <div className="flex items-center gap-3">
+                    <span id="quick-waste-weight-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Weight:</span>
+                    <div role="group" aria-labelledby="quick-waste-weight-label" className="flex items-center gap-3">
                       <button 
                         onClick={() => setWasteWeight(w => Math.max(1, w - 1))}
+                        aria-label="Decrease waste weight"
                         className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold text-lg flex items-center justify-center transition"
                       >
-                        <Minus className="w-4 h-4" />
+                        <Minus className="w-4 h-4" aria-hidden="true" />
                       </button>
                       <div className="flex-1 bg-gray-900 border border-gray-800 rounded-xl py-2 px-4 text-center font-bold text-white">
                         {wasteWeight} <span className="text-gray-400 font-medium text-xs">kg</span>
                       </div>
                       <button 
                         onClick={() => setWasteWeight(w => w + 1)}
+                        aria-label="Increase waste weight"
                         className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold text-lg flex items-center justify-center transition"
                       >
-                        <Plus className="w-4 h-4" />
+                        <Plus className="w-4 h-4" aria-hidden="true" />
                       </button>
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Instead of:</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <span id="quick-waste-instead-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Instead of:</span>
+                    <div role="group" aria-labelledby="quick-waste-instead-label" className="grid grid-cols-3 gap-2">
                       {[
                         { id: 'landfill', label: 'Landfill / Trash' },
                         { id: 'burning', label: 'Open Burning' },
@@ -674,8 +699,8 @@ export default function DashboardView({
               {activeCategory === 'shopping' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">I bought:</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <span id="quick-shopping-by-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">I bought:</span>
+                    <div role="group" aria-labelledby="quick-shopping-by-label" className="grid grid-cols-3 gap-2">
                       {[
                         { id: 'secondhand', label: 'Second-hand' },
                         { id: 'reusable', label: 'Reusable Bag' },
@@ -697,29 +722,31 @@ export default function DashboardView({
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Quantity:</label>
-                    <div className="flex items-center gap-3">
+                    <span id="quick-shopping-items-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Quantity:</span>
+                    <div role="group" aria-labelledby="quick-shopping-items-label" className="flex items-center gap-3">
                       <button 
                         onClick={() => setShoppingItems(i => Math.max(1, i - 1))}
+                        aria-label="Decrease shopping items quantity"
                         className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold text-lg flex items-center justify-center transition"
                       >
-                        <Minus className="w-4 h-4" />
+                        <Minus className="w-4 h-4" aria-hidden="true" />
                       </button>
                       <div className="flex-1 bg-gray-900 border border-gray-800 rounded-xl py-2 px-4 text-center font-bold text-white">
                         {shoppingItems} <span className="text-gray-400 font-medium text-xs">items</span>
                       </div>
                       <button 
                         onClick={() => setShoppingItems(i => i + 1)}
+                        aria-label="Increase shopping items quantity"
                         className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-white font-bold text-lg flex items-center justify-center transition"
                       >
-                        <Plus className="w-4 h-4" />
+                        <Plus className="w-4 h-4" aria-hidden="true" />
                       </button>
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Instead of:</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <span id="quick-shopping-instead-label" className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">Instead of:</span>
+                    <div role="group" aria-labelledby="quick-shopping-instead-label" className="grid grid-cols-3 gap-2">
                       {[
                         { id: 'fastfashion', label: 'Fast Fashion' },
                         { id: 'plasticbag', label: 'Plastic Bag' },
@@ -757,7 +784,7 @@ export default function DashboardView({
               <div className="text-right">
                 <p className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Cool Points</p>
                 <p className="text-lg font-bold text-yellow-400 flex items-center gap-1 justify-end">
-                  <Coins className="w-4 h-4" />
+                  <Coins className="w-4 h-4" aria-hidden="true" />
                   <span>+{currentCoolPoints}</span>
                 </p>
               </div>
@@ -766,6 +793,7 @@ export default function DashboardView({
             <button
               onClick={handleLogActionSubmit}
               disabled={currentSavings <= 0}
+              aria-label={`Log ${activeCategory} action: save ${currentSavings} kg CO2eq`}
               className={`px-6 py-4 rounded-2xl text-sm font-bold tracking-wide uppercase transition-all duration-300 shrink-0 select-none ${
                 currentSavings > 0 
                   ? 'bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-extrabold cursor-pointer shadow-neon-emerald shadow-emerald-500/30 active:scale-95' 
@@ -786,9 +814,10 @@ export default function DashboardView({
                 <p className="text-xs text-gray-400">Carbon savings breakdown by categories.</p>
               </div>
               {/* Metric Selector Toggle */}
-              <div className="flex bg-gray-950 p-0.5 rounded-xl border border-gray-800">
+              <div className="flex bg-gray-950 p-0.5 rounded-xl border border-gray-800" role="group" aria-label="Savings metric">
                 <button
                   onClick={() => setAnalyticsMetric('points')}
+                  aria-pressed={analyticsMetric === 'points'}
                   className={`px-3 py-1 text-[10px] font-bold uppercase rounded-lg tracking-wider transition-all duration-150 ${
                     analyticsMetric === 'points' ? 'bg-gray-850 text-emerald-400' : 'text-gray-500 hover:text-white'
                   }`}
@@ -797,6 +826,7 @@ export default function DashboardView({
                 </button>
                 <button
                   onClick={() => setAnalyticsMetric('emissions')}
+                  aria-pressed={analyticsMetric === 'emissions'}
                   className={`px-3 py-1 text-[10px] font-bold uppercase rounded-lg tracking-wider transition-all duration-150 ${
                     analyticsMetric === 'emissions' ? 'bg-gray-850 text-emerald-400' : 'text-gray-500 hover:text-white'
                   }`}
@@ -857,14 +887,21 @@ export default function DashboardView({
                   <div key={category.name} className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs font-semibold">
                       <div className="flex items-center gap-2 text-gray-300">
-                        <CatIcon className="w-3.5 h-3.5 text-gray-400" />
+                        <CatIcon className="w-3.5 h-3.5 text-gray-400" aria-hidden="true" />
                         <span>{category.name}</span>
                         <span className="text-[10px] text-gray-500 font-normal">({percentage}%)</span>
                       </div>
                       <span className={`${category.textColor} font-bold`}>{displayVal}</span>
                     </div>
                     {/* Outer Progress Tracker */}
-                    <div className="w-full h-2.5 bg-gray-950 rounded-full overflow-hidden border border-gray-800/60">
+                    <div 
+                      role="progressbar"
+                      aria-valuenow={percentage}
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                      aria-label={`${category.name} savings breakdown: ${percentage}%`}
+                      className="w-full h-2.5 bg-gray-950 rounded-full overflow-hidden border border-gray-800/60"
+                    >
                       <div 
                         className={`h-full ${category.color} rounded-full transition-all duration-750`} 
                         style={{ width: `${percentage}%` }}
@@ -881,7 +918,7 @@ export default function DashboardView({
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Weekly trend</span>
               <span className="text-xs text-emerald-400 flex items-center gap-1 font-bold">
-                <TrendingUp className="w-3 h-3" />
+                <TrendingUp className="w-3 h-3" aria-hidden="true" />
                 <span>+12.4% this week</span>
               </span>
             </div>
@@ -911,14 +948,14 @@ export default function DashboardView({
         </div>
 
         {/* 4. Community & Leaderboard Card (Col span 12 or fit inside side panels) */}
-        <div className="lg:col-span-12 bg-gray-900 border border-gray-800 rounded-3xl p-6 hover:border-gray-700/80 transition-all duration-300">
+        <div className="lg:col-span-12 bg-gray-900 border border-gray-800 rounded-3xl p-6 hover:border-gray-750 transition-all duration-300">
           <div className="flex items-center justify-between mb-8">
             <div>
               <h3 className="text-lg font-bold text-white tracking-wide">Community Leaderboard</h3>
               <p className="text-xs text-gray-400">See how you rank against top climate champions.</p>
             </div>
             <div className="flex items-center gap-2 text-xs bg-gray-950 border border-gray-800 rounded-2xl py-1 px-3">
-              <Users className="w-3.5 h-3.5 text-emerald-400" />
+              <Users className="w-3.5 h-3.5 text-emerald-400" aria-hidden="true" />
               <span className="text-gray-300 font-medium">10,241 active users</span>
             </div>
           </div>
@@ -930,7 +967,7 @@ export default function DashboardView({
             <div className="flex flex-col items-center">
               <div className="relative mb-2">
                 <div className="w-14 h-14 md:w-16 md:h-16 rounded-full border-2 border-gray-400 overflow-hidden bg-gray-800">
-                  <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100" alt="Sarah Jenkins" className="w-full h-full object-cover" />
+                  <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100" alt="Sarah Jenkins's profile photo" className="w-full h-full object-cover" />
                 </div>
                 <div className="absolute -bottom-1 -right-1 bg-gray-400 text-gray-950 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold">2</div>
               </div>
@@ -945,10 +982,10 @@ export default function DashboardView({
             <div className="flex flex-col items-center">
               <div className="relative mb-2">
                 <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-yellow-400 animate-bounce">
-                  <Award className="w-6 h-6 fill-yellow-400/20" />
+                  <Award className="w-6 h-6 fill-yellow-400/20" aria-hidden="true" />
                 </div>
                 <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-yellow-400 overflow-hidden bg-gray-800 p-0.5">
-                  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100" alt="David Miller" className="w-full h-full object-cover rounded-full" />
+                  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100" alt="David Miller's profile photo" className="w-full h-full object-cover rounded-full" />
                 </div>
                 <div className="absolute -bottom-1 -right-1 bg-yellow-400 text-gray-950 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black">1</div>
               </div>
@@ -963,7 +1000,7 @@ export default function DashboardView({
             <div className="flex flex-col items-center">
               <div className="relative mb-2">
                 <div className="w-14 h-14 md:w-16 md:h-16 rounded-full border-2 border-amber-600 overflow-hidden bg-gray-800">
-                  <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100" alt="Emily Chen" className="w-full h-full object-cover" />
+                  <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100" alt="Emily Chen's profile photo" className="w-full h-full object-cover" />
                 </div>
                 <div className="absolute -bottom-1 -right-1 bg-amber-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold">3</div>
               </div>
@@ -996,7 +1033,7 @@ export default function DashboardView({
                     #{runner.rank}
                   </span>
                   <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-800">
-                    <img src={runner.avatar} alt={runner.name} className="w-full h-full object-cover" />
+                    <img src={runner.avatar} alt={`${runner.name}'s profile photo`} className="w-full h-full object-cover" />
                   </div>
                   <span className={`text-sm font-semibold ${runner.isUser ? 'text-white font-extrabold' : 'text-gray-200'}`}>
                     {runner.name}

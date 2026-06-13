@@ -133,6 +133,7 @@ export default function SignIn() {
             SECURED THROUGH FIREBASE GOOGLE OAUTH
           </p>
         </div>
-      </main>
+      </div>
+    </main>
   );
 }

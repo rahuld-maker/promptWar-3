@@ -64,7 +64,7 @@ export default function LeaderboardView({ userStats }) {
         </div>
 
         {/* Board switcher */}
-        <div className="flex bg-gray-900 border border-gray-800 p-1 rounded-2xl">
+        <div className="flex bg-gray-900 border border-gray-800 p-1 rounded-2xl" role="tablist" aria-label="Filter leaderboard standings by category">
           {[
             { id: 'individuals', label: 'Individuals' },
             { id: 'sagecorp', label: 'Sage Corp' },
@@ -72,6 +72,8 @@ export default function LeaderboardView({ userStats }) {
           ].map((tab) => (
             <button
               key={tab.id}
+              role="tab"
+              aria-selected={boardTab === tab.id}
               onClick={() => { setBoardTab(tab.id); setSearchQuery(''); }}
               className={`px-4 py-1.5 text-xs font-semibold rounded-xl uppercase tracking-wider transition-all duration-200 ${
                 boardTab === tab.id 
@@ -90,7 +92,7 @@ export default function LeaderboardView({ userStats }) {
         <div className="xl:col-span-4 bg-gray-900 border border-gray-800 rounded-3xl p-6 space-y-5">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center">
-              <Trophy className="w-6 h-6 text-yellow-400" />
+              <Trophy className="w-6 h-6 text-yellow-400" aria-hidden="true" />
             </div>
             <div>
               <h3 className="text-sm font-extrabold text-white">Your Standing</h3>
@@ -117,7 +119,7 @@ export default function LeaderboardView({ userStats }) {
 
           <div className="p-4 bg-emerald-950/20 border border-emerald-900/40 rounded-2xl space-y-2">
             <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-              <TrendingUp className="w-3.5 h-3.5" />
+              <TrendingUp className="w-3.5 h-3.5" aria-hidden="true" />
               Promotion Status
             </span>
             <p className="text-xs text-emerald-300 leading-relaxed font-medium">
@@ -136,9 +138,11 @@ export default function LeaderboardView({ userStats }) {
             </h3>
             {/* Search Input */}
             <div className="relative w-48 md:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" aria-hidden="true" />
+              <label htmlFor="board-search" className="sr-only">Search standings</label>
               <input
-                type="text"
+                id="board-search"
+                type="search"
                 placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -176,7 +180,7 @@ export default function LeaderboardView({ userStats }) {
                       <div className="flex items-center gap-3">
                         {row.avatar && (
                           <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-gray-850 border border-gray-800">
-                            <img src={row.avatar} alt={row.name} className="w-full h-full object-cover" />
+                            <img src={row.avatar} alt={`${row.name}'s profile photo`} className="w-full h-full object-cover" />
                           </div>
                         )}
                         <div>
