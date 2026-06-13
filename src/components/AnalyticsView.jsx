@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { 
   BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell, 
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
 } from 'recharts';
-import { TrendingUp, Award, Calendar, RefreshCw, BarChart3, PieChart as PieIcon, Info } from 'lucide-react';
+import { TrendingUp, Calendar, BarChart3, PieChart as PieIcon } from 'lucide-react';
 
 export default function AnalyticsView({ userStats }) {
   const [timeframe, setTimeframe] = useState('weekly'); // 'weekly', 'monthly'

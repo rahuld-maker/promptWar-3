@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { 
   Bus, Zap, Utensils, Trash2, ShoppingBag, Plus, Minus, Coins, 
-  ArrowUpRight, BarChart3, Users, Leaf, Bike, Train, Car, Plane, 
-  Trash, ShoppingCart, Award, CheckCircle2, ChevronRight, TrendingUp
+  Users, Leaf, Bike, Train, Car, Plane, 
+  Award, CheckCircle2, TrendingUp
 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
 import AICoachCard from './AICoachCard';
@@ -145,7 +145,7 @@ export default function DashboardView({
   const handleLogActionSubmit = () => {
     if (currentSavings <= 0) return;
 
-    let desc = '';
+    let desc;
     switch (activeCategory) {
       case 'travel':
         desc = `Travelled by ${travelBy} instead of ${travelInsteadOf} for ${travelDistance} km`;
@@ -182,7 +182,6 @@ export default function DashboardView({
   // Path for a beautiful curved semi-circle
   // SVG size is 200x120, center is 100, 100, radius is 80.
   // Semicircle arc length = pi * R = 3.14159 * 80 = 251.3
-  const arcRadius = 80;
   const strokeDash = 251.3;
   const strokeOffset = strokeDash - (progressPercent / 100) * strokeDash;
 

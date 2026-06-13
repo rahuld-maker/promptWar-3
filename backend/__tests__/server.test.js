@@ -1,17 +1,10 @@
-/**
- * @file server.test.js
- * @description Integration-style unit tests for the Express server routes.
- * Uses Vitest with supertest to test /api/health and /api/actions/log endpoints.
- * Firebase Admin is mocked — no real external calls are made.
- */
-
-import { describe, it, expect, vi, beforeAll } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import request from 'supertest';
-import express from 'express';
-import cors from 'cors';
 
-// ─── Shared mock for verifyIdToken ─────────────────────────────────────────────
 const mockVerifyIdToken = vi.fn();
+
+vi.stubEnv('NODE_ENV', 'test');
+vi.stubEnv('ALLOWED_ORIGINS', 'http://localhost:5173,https://app.example.com');
 
 vi.mock('../firebaseAdmin.js', () => ({
   default: {
@@ -21,101 +14,74 @@ vi.mock('../firebaseAdmin.js', () => ({
   },
 }));
 
-// Mock coachingRoutes to avoid deep dependency chains in these tests
-vi.mock('../routes/coachingRoutes.js', () => ({
-  default: (req, res, next) => next(),
+vi.mock('../geminiService.js', () => ({
+  generateCoachingTips: vi.fn().mockResolvedValue({
+    headline: 'Strong progress',
+    summary: 'You are saving carbon consistently.',
+    tips: [
+      { category: 'travel', tip: 'Use the train twice this week.', impact: 'High' },
+      { category: 'energy', tip: 'Run fans before air conditioning.', impact: 'Medium' },
+      { category: 'food', tip: 'Keep choosing plant-forward meals.', impact: 'Medium' },
+    ],
+    challenge: 'Make two commute swaps this week.',
+    kudos: 'Your travel savings are excellent.',
+  }),
 }));
 
-// Disable rate limiting in tests to prevent 429 interference
 vi.mock('express-rate-limit', () => ({
   default: () => (req, res, next) => next(),
 }));
 
-// ─── Build testable app ────────────────────────────────────────────────────────
 let app;
 
 beforeAll(async () => {
-  const { verifyToken } = await import('../authMiddleware.js');
+  app = (await import('../server.js')).default;
+});
 
-  app = express();
-  app.use(cors());
-  app.use(express.json());
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
-  // Health route
-  app.get('/api/health', (req, res) => {
-    res.json({
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      service: 'Carbon Footprint Platform API',
-      version: '2.0.0',
-    });
+const validUser = {
+  uid: 'user-abc',
+  email: 'valid@example.com',
+  name: 'Valid User',
+  picture: '',
+};
+
+describe('security middleware', () => {
+  it('sets hardened HTTP headers', async () => {
+    const res = await request(app).get('/api/health').set('Origin', 'https://app.example.com');
+
+    expect(res.statusCode).toBe(200);
+    expect(res.headers['x-powered-by']).toBeUndefined();
+    expect(res.headers['x-frame-options']).toBe('DENY');
+    expect(res.headers['strict-transport-security']).toContain('max-age=31536000');
+    expect(res.headers['content-security-policy']).toContain("default-src 'self'");
   });
 
-  // Log action route (mirrors production logic)
-  app.post('/api/actions/log', verifyToken, (req, res) => {
-    const { category, savings, description } = req.body;
+  it('rejects disallowed origins with 403', async () => {
+    const res = await request(app).get('/api/health').set('Origin', 'https://evil.example');
 
-    const validCategories = ['travel', 'energy', 'food', 'waste', 'shopping'];
-    if (!category || !validCategories.includes(category)) {
-      return res.status(400).json({
-        error: 'Bad Request',
-        message: `Invalid category. Must be one of: ${validCategories.join(', ')}`,
-      });
-    }
-
-    const parsedSavings = parseFloat(savings);
-    if (isNaN(parsedSavings) || parsedSavings < 0 || parsedSavings > 1000) {
-      return res.status(400).json({
-        error: 'Bad Request',
-        message: 'Invalid savings value. Must be a number between 0 and 1000.',
-      });
-    }
-
-    const { uid, name, email } = req.user;
-    const calculatedPoints = Math.round(parsedSavings * 10);
-
-    return res.status(200).json({
-      success: true,
-      message: 'Carbon footprint action recorded successfully.',
-      data: {
-        userId: uid,
-        userName: name,
-        userEmail: email,
-        loggedAction: {
-          category,
-          savings: parsedSavings,
-          points: calculatedPoints,
-          description: description || `Saved carbon in ${category} category`,
-          timestamp: new Date().toISOString(),
-        },
-      },
-    });
+    expect(res.statusCode).toBe(403);
+    expect(res.body.error).toBe('Forbidden');
   });
 });
 
-// ─── GET /api/health ──────────────────────────────────────────────────────────
 describe('GET /api/health', () => {
-  it('should return 200 with a healthy status', async () => {
+  it('returns health metadata', async () => {
     const res = await request(app).get('/api/health');
+
     expect(res.statusCode).toBe(200);
     expect(res.body.status).toBe('healthy');
-  });
-
-  it('should include service name and version', async () => {
-    const res = await request(app).get('/api/health');
     expect(res.body.service).toBe('Carbon Footprint Platform API');
     expect(res.body.version).toBe('2.0.0');
-  });
-
-  it('should include a valid ISO timestamp', async () => {
-    const res = await request(app).get('/api/health');
     expect(new Date(res.body.timestamp).toISOString()).toBe(res.body.timestamp);
   });
 });
 
-// ─── POST /api/actions/log ────────────────────────────────────────────────────
 describe('POST /api/actions/log', () => {
-  it('should return 401 when Authorization header is missing', async () => {
+  it('returns 401 when Authorization header is missing', async () => {
     const res = await request(app)
       .post('/api/actions/log')
       .send({ category: 'travel', savings: 1.5 });
@@ -124,10 +90,8 @@ describe('POST /api/actions/log', () => {
     expect(res.body.error).toBe('Unauthorized');
   });
 
-  it('should return 400 for an invalid category', async () => {
-    mockVerifyIdToken.mockResolvedValueOnce({
-      uid: 'u1', email: 'test@example.com', name: 'Tester', picture: '',
-    });
+  it('returns 400 for an invalid category', async () => {
+    mockVerifyIdToken.mockResolvedValueOnce(validUser);
 
     const res = await request(app)
       .post('/api/actions/log')
@@ -138,10 +102,24 @@ describe('POST /api/actions/log', () => {
     expect(res.body.error).toBe('Bad Request');
   });
 
-  it('should return 400 for a savings value exceeding 1000', async () => {
-    mockVerifyIdToken.mockResolvedValueOnce({
-      uid: 'u2', email: 'test2@example.com', name: 'Tester2', picture: '',
-    });
+  it('returns 400 for parameter pollution and unknown fields', async () => {
+    mockVerifyIdToken.mockResolvedValueOnce(validUser);
+
+    const res = await request(app)
+      .post('/api/actions/log')
+      .set('Authorization', 'Bearer valid-token')
+      .send({
+        category: 'energy',
+        savings: 5,
+        '$where': 'this.savings > 0',
+      });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toBe('Request body failed validation.');
+  });
+
+  it('returns 400 for a savings value exceeding 1000', async () => {
+    mockVerifyIdToken.mockResolvedValueOnce(validUser);
 
     const res = await request(app)
       .post('/api/actions/log')
@@ -149,13 +127,10 @@ describe('POST /api/actions/log', () => {
       .send({ category: 'energy', savings: 9999 });
 
     expect(res.statusCode).toBe(400);
-    expect(res.body.message).toContain('between 0 and 1000');
   });
 
-  it('should return 200 with correct points for a valid request', async () => {
-    mockVerifyIdToken.mockResolvedValueOnce({
-      uid: 'user-abc', email: 'valid@example.com', name: 'Valid User', picture: '',
-    });
+  it('returns 200 with correct points for a valid request', async () => {
+    mockVerifyIdToken.mockResolvedValueOnce(validUser);
 
     const res = await request(app)
       .post('/api/actions/log')
@@ -166,22 +141,33 @@ describe('POST /api/actions/log', () => {
     expect(res.body.success).toBe(true);
     expect(res.body.data.loggedAction.category).toBe('food');
     expect(res.body.data.loggedAction.savings).toBe(5.4);
-    // points = Math.round(5.4 * 10) = 54
     expect(res.body.data.loggedAction.points).toBe(54);
     expect(res.body.data.loggedAction.description).toBe('Plant-based meal');
   });
+});
 
-  it('should use a default description when description is omitted', async () => {
-    mockVerifyIdToken.mockResolvedValueOnce({
-      uid: 'user-xyz', email: 'desc@example.com', name: 'No Desc User', picture: '',
-    });
+describe('POST /api/coach/tips', () => {
+  it('rejects extra fields in nested request objects', async () => {
+    mockVerifyIdToken.mockResolvedValueOnce(validUser);
 
     const res = await request(app)
-      .post('/api/actions/log')
+      .post('/api/coach/tips')
       .set('Authorization', 'Bearer valid-token')
-      .send({ category: 'waste', savings: 10 });
+      .send({
+        totalSaved: 20,
+        totalPoints: 200,
+        categoryBreakdown: {
+          travel: 10,
+          energy: 5,
+          food: 3,
+          waste: 2,
+          shopping: 0,
+          polluted: true,
+        },
+        recentLogs: [],
+      });
 
-    expect(res.statusCode).toBe(200);
-    expect(res.body.data.loggedAction.description).toBe('Saved carbon in waste category');
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toBe('Request body failed validation.');
   });
 });

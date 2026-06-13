@@ -7,6 +7,7 @@
 import { Router } from 'express';
 import { verifyToken } from '../authMiddleware.js';
 import { generateCoachingTips } from '../geminiService.js';
+import { coachingTipsSchema, validateBody } from '../validation.js';
 
 const router = Router();
 
@@ -21,21 +22,8 @@ const router = Router();
  *   recentLogs: Array<{ category, description, savings }>
  * }
  */
-router.post('/tips', verifyToken, async (req, res) => {
+router.post('/tips', verifyToken, validateBody(coachingTipsSchema), async (req, res) => {
   const { totalSaved, totalPoints, categoryBreakdown, recentLogs } = req.body;
-
-  // --- Input Validation ---
-  if (
-    typeof totalSaved !== 'number' ||
-    typeof totalPoints !== 'number' ||
-    typeof categoryBreakdown !== 'object' ||
-    !Array.isArray(recentLogs)
-  ) {
-    return res.status(400).json({
-      error: 'Bad Request',
-      message: 'Missing or invalid fields: totalSaved, totalPoints, categoryBreakdown, recentLogs are required.',
-    });
-  }
 
   try {
     const userLogsSummary = {

@@ -10,7 +10,7 @@
  * @param {Function} props.getIdToken - Function to retrieve Firebase ID token.
  */
 
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import {
   Sparkles, Zap, Leaf, ShoppingBag, Lightbulb, Car,
   Trash2, RefreshCw, ChevronRight, Trophy, Target

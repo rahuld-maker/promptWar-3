@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { 
   Home, LogIn, Award, BarChart3, Users, Leaf, Coins, 
-  Search, ShieldCheck, ChevronDown, Menu, X, CheckCircle2, LogOut 
+  Search, ShieldCheck, Menu, X, CheckCircle2, LogOut 
 } from 'lucide-react';
 import { useAuth } from './context/AuthContext';
 import SignIn from './components/SignIn';

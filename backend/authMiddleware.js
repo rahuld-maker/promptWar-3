@@ -24,18 +24,25 @@ export const verifyToken = async (req, res, next) => {
   }
 
   // 3. Extract the token
-  const token = authHeader.split(' ')[1];
+  const [, token, extra] = authHeader.trim().split(/\s+/);
 
-  if (!token) {
+  if (!token || extra) {
     return res.status(401).json({
       error: 'Unauthorized',
-      message: 'Access Denied: Token segment is missing from Bearer header.'
+      message: 'Access Denied: Bearer token is missing or malformed.'
     });
   }
 
   try {
-    // 4. Verify ID Token with Firebase Admin
-    const decodedToken = await admin.auth().verifyIdToken(token);
+    // 4. Verify ID Token with Firebase Admin and reject revoked tokens.
+    const decodedToken = await admin.auth().verifyIdToken(token, true);
+
+    if (!decodedToken.uid) {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Access Denied: Invalid authentication token.',
+      });
+    }
     
     // 5. Attach decoded user attributes to request context
     req.user = {
@@ -47,7 +54,7 @@ export const verifyToken = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.error('Firebase token verification failed:', error.message);
+    console.error('Firebase token verification failed:', error.code || error.message);
 
     // Provide specific guidance for expired tokens vs other auth faults
     if (error.code === 'auth/id-token-expired') {
@@ -58,10 +65,16 @@ export const verifyToken = async (req, res, next) => {
       });
     }
 
+    if (error.code === 'auth/id-token-revoked' || error.code === 'auth/user-disabled') {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'Access Denied: User session is no longer valid.',
+      });
+    }
+
     return res.status(401).json({
       error: 'Unauthorized',
-      message: 'Access Denied: Invalid authentication token.',
-      details: error.message
+      message: 'Access Denied: Invalid authentication token.'
     });
   }
 };

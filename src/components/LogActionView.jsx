@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { 
-  Bus, Zap, Utensils, Trash2, ShoppingBag, Plus, Minus, Coins,
-  History, Search, Trash, Calendar, ArrowUpRight, CheckCircle2 
+  Bus, Zap, Utensils, Trash2, ShoppingBag, Coins,
+  History, Search, Trash, Calendar
 } from 'lucide-react';
 
 export default function LogActionView({ 
@@ -102,7 +102,7 @@ export default function LogActionView({
   const handleLogActionSubmit = () => {
     if (currentSavings <= 0) return;
 
-    let desc = '';
+    let desc;
     switch (activeCategory) {
       case 'travel':
         desc = `Commuted via ${travelBy} (saving car emissions) for ${travelDistance} km`;

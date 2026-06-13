@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Users, Award, Search, Trophy, ShieldAlert, Star, TrendingUp } from 'lucide-react';
+import { useState } from 'react';
+import { Search, Trophy, TrendingUp } from 'lucide-react';
 
 export default function LeaderboardView({ userStats }) {
   const [boardTab, setBoardTab] = useState('individuals'); // 'individuals', 'sagecorp', 'globalteams'

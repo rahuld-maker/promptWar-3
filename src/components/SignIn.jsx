@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { auth } from '../firebaseConfig';
-import { Leaf, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { Leaf, ShieldAlert } from 'lucide-react';
 
 export default function SignIn() {
   const { signInWithGoogle } = useAuth();

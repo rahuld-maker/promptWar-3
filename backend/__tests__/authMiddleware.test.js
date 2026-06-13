@@ -86,6 +86,7 @@ describe('verifyToken Middleware', () => {
     await verifyToken(req, res, next);
 
     expect(next).toHaveBeenCalledOnce();
+    expect(mockVerifyIdToken).toHaveBeenCalledWith('valid-token-string', true);
     expect(req.user).toEqual({
       uid: 'user-123',
       email: 'test@example.com',
@@ -121,6 +122,21 @@ describe('verifyToken Middleware', () => {
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({ error: 'Unauthorized' })
+    );
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('should return 403 for revoked tokens', async () => {
+    const revokedError = new Error('Firebase ID token has been revoked.');
+    revokedError.code = 'auth/id-token-revoked';
+    mockVerifyIdToken.mockRejectedValueOnce(revokedError);
+
+    req = mockReq({ authorization: 'Bearer revoked-token' });
+    await verifyToken(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({ error: 'Forbidden' })
     );
     expect(next).not.toHaveBeenCalled();
   });

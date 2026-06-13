@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Award, Leaf, Zap, Utensils, Trash2, ShoppingBag, Bus, Calendar, CheckCircle2, Flame, Users } from 'lucide-react';
+import { useState } from 'react';
+import { Award, Leaf, Zap, Utensils, Trash2, ShoppingBag, Bus, CheckCircle2, Flame, Users } from 'lucide-react';
 
 export default function ChallengesView({ 
   challenges, 
