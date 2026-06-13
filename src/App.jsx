@@ -10,6 +10,7 @@ import LogActionView from './components/LogActionView';
 import ChallengesView from './components/ChallengesView';
 import LeaderboardView from './components/LeaderboardView';
 import AnalyticsView from './components/AnalyticsView';
+import { getApiErrorMessage, requestJson } from './utils/api';
 
 export default function App() {
   const { user, loading, logout, getIdToken } = useAuth();
@@ -118,28 +119,20 @@ export default function App() {
         return;
       }
 
-      const response = await fetch('/api/actions/log', {
+      const result = await requestJson('/api/actions/log', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           category: action.category,
           savings: action.savings,
-          description: action.description
-        })
+          description: action.description,
+        }),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP status error: ${response.status}`);
-      }
-
-      const result = await response.json();
       console.log('[Sync Success] Backend recorded log transaction:', result);
     } catch (err) {
-      console.warn('[Sync Offline] Express backend connection failed:', err.message);
-      showToast('Recorded locally. Sync with backend failed (offline).');
+      console.warn('[Sync Offline] Express backend connection failed:', getApiErrorMessage(err));
+      showToast(`Recorded locally. Sync failed: ${getApiErrorMessage(err)}`);
     }
   };
 

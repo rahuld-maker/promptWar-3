@@ -7,6 +7,8 @@
 import { Router } from 'express';
 import { verifyToken } from '../authMiddleware.js';
 import { generateCoachingTips } from '../geminiService.js';
+import { classifyGeminiError } from '../utils/errorHandling.js';
+import { logger } from '../utils/logger.js';
 import { coachingTipsSchema, validateBody } from '../validation.js';
 
 const router = Router();
@@ -34,43 +36,21 @@ router.post('/tips', verifyToken, validateBody(coachingTipsSchema), async (req, 
       recentLogs,
     };
 
-    console.log(`[AI Coach] Generating tips for user: ${req.user.email}`);
+    logger.info('AI Coach request started', { email: req.user.email, totalSaved, totalPoints });
     const coaching = await generateCoachingTips(userLogsSummary);
 
     return res.status(200).json({
       success: true,
       data: coaching,
     });
-  } catch (err) {
-    console.error('[AI Coach Error]', err.message);
+  } catch (error) {
+    const classification = classifyGeminiError(error);
+    logger.error('AI Coach request failed', { error: error.message, classification });
 
-    // Distinguish API key errors from other issues
-    if (err.message.includes('GEMINI_API_KEY')) {
-      return res.status(503).json({
-        error: 'Service Unavailable',
-        message: 'The AI Coach service is not configured. Please add GEMINI_API_KEY to backend .env.',
-      });
-    }
-
-    // Handle quota exceeded errors
-    if (err.message.includes('429') || err.message.includes('quota') || err.message.includes('Too Many Requests')) {
-      return res.status(429).json({
-        error: 'Quota Exceeded',
-        message: 'Gemini API free-tier quota exceeded for today. The AI Coach will be available again tomorrow, or upgrade your API plan at aistudio.google.com.',
-      });
-    }
-
-    // Handle invalid model errors
-    if (err.message.includes('404') || err.message.includes('not found')) {
-      return res.status(503).json({
-        error: 'Model Unavailable',
-        message: 'The AI model is temporarily unavailable. Please try again in a few minutes.',
-      });
-    }
-
-    return res.status(500).json({
-      error: 'Internal Server Error',
-      message: 'The AI Coach failed to generate tips. Please try again later.',
+    return res.status(classification.status).json({
+      error: classification.code,
+      message: classification.message,
+      retryable: classification.retryable,
     });
   }
 });

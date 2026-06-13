@@ -14,6 +14,7 @@ import { verifyToken } from './authMiddleware.js';
 import coachingRoutes from './routes/coachingRoutes.js';
 import { actionLogSchema, validateBody } from './validation.js';
 import { corsOptionsDelegate, helmetOptions, rejectDisallowedOrigins } from './securityConfig.js';
+import { logger } from './utils/logger.js';
 
 dotenv.config();
 
@@ -63,8 +64,7 @@ app.post('/api/actions/log', verifyToken, validateBody(actionLogSchema), (req, r
   const { uid, name, email } = req.user;
   const calculatedPoints = Math.round(savings * 10);
 
-  console.log(`[DB Transaction] Saving carbon log for: ${name} (${email})`);
-  console.log(`  - Action: ${description || category} | Saves: ${savings} kg CO2eq`);
+  logger.info('Saving carbon log event', { name, email, category, savings, description });
 
   return res.status(200).json({
     success: true,
@@ -100,7 +100,7 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, _next) => {
-  console.error('[Unhandled Server Error]', err.message);
+  logger.error('Unhandled server error', { path: req.originalUrl, message: err.message, stack: err.stack });
 
   if (err.type === 'entity.parse.failed') {
     return res.status(400).json({ error: 'Bad Request', message: 'Malformed JSON request body.' });
@@ -111,11 +111,10 @@ app.use((err, req, res, _next) => {
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   app.listen(PORT, '0.0.0.0', () => {
-    console.log('==================================================');
-    console.log('  Carbon Footprint Platform API v2.0              ');
-    console.log(`  Listening on: http://0.0.0.0:${PORT}            `);
-    console.log(`  Health:       http://0.0.0.0:${PORT}/api/health`);
-    console.log('==================================================');
+    logger.info('Carbon Footprint Platform API ready', {
+      port: PORT,
+      health: `http://0.0.0.0:${PORT}/api/health`,
+    });
   });
 }
 

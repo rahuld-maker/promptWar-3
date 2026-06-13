@@ -11,6 +11,7 @@
  */
 
 import { useState, useCallback } from 'react';
+import { getApiErrorMessage, requestJson } from '../utils/api';
 import {
   Sparkles, Zap, Leaf, ShoppingBag, Lightbulb, Car,
   Trash2, RefreshCw, ChevronRight, Trophy, Target
@@ -140,30 +141,18 @@ export default function AICoachCard({ userStats, recentLogs, getIdToken }) {
         recentLogs: recentLogs.slice(0, 5),
       };
 
-      const response = await fetch('/api/coach/tips', {
+      const result = await requestJson('/api/coach/tips', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        // Show friendly quota message
-        if (response.status === 429) {
-          throw new Error('Daily API quota reached. The AI Coach resets at midnight. Try again tomorrow!');
-        }
-        throw new Error(errData.message || `Server error: ${response.status}`);
-      }
-
-      const result = await response.json();
       setCoaching(result.data);
       setStatus('success');
     } catch (err) {
-      console.error('[AI Coach] Fetch failed:', err.message);
-      setErrorMessage(err.message || 'An unexpected error occurred. Please try again.');
+      const message = getApiErrorMessage(err);
+      console.error('[AI Coach] Fetch failed:', message);
+      setErrorMessage(message);
       setStatus('error');
     }
   }, [userStats, recentLogs, getIdToken]);
