@@ -19,9 +19,20 @@ const parseAllowedOrigins = () => {
 
 export const allowedOrigins = parseAllowedOrigins();
 
-export const isOriginAllowed = (origin) => {
+export const isOriginAllowed = (origin, req = null) => {
   if (!origin) {
     return true;
+  }
+
+  try {
+    const originHost = new URL(origin).host;
+    const requestHost = req?.get('host');
+
+    if (requestHost && originHost === requestHost) {
+      return true;
+    }
+  } catch {
+    // Ignore malformed origins and fall back to configured allowlist.
   }
 
   return allowedOrigins.includes(origin);
@@ -30,7 +41,7 @@ export const isOriginAllowed = (origin) => {
 export const rejectDisallowedOrigins = (req, res, next) => {
   const origin = req.get('origin');
 
-  if (!isOriginAllowed(origin)) {
+  if (!isOriginAllowed(origin, req)) {
     return res.status(403).json({
       error: 'Forbidden',
       message: 'Origin is not allowed by this API.',
@@ -43,7 +54,7 @@ export const rejectDisallowedOrigins = (req, res, next) => {
 export const corsOptionsDelegate = (req, callback) => {
   const origin = req.header('Origin');
   callback(null, {
-    origin: isOriginAllowed(origin),
+    origin: isOriginAllowed(origin, req),
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     maxAge: 600,

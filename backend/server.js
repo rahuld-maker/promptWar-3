@@ -27,7 +27,6 @@ const PORT = Number(process.env.PORT) || 8080;
 app.disable('x-powered-by');
 app.set('trust proxy', 1);
 app.use(helmet(helmetOptions));
-app.use(rejectDisallowedOrigins);
 app.use(cors(corsOptionsDelegate));
 
 const apiLimiter = rateLimit({
@@ -46,6 +45,7 @@ const aiLimiter = rateLimit({
   message: { error: 'Too Many Requests', message: 'AI Coach limit reached. Please wait before requesting more tips.' },
 });
 
+app.use('/api', rejectDisallowedOrigins);
 app.use('/api', apiLimiter);
 app.use('/api/coach', aiLimiter);
 app.use(express.json({ limit: '100kb', strict: true }));
