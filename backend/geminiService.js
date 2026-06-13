@@ -5,6 +5,7 @@
  */
 
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
+import { getCachedValue, setCachedValue } from './utils/cache.js';
 
 // --- Model Configuration ---
 const MODEL_NAME = 'gemini-2.0-flash';
@@ -77,6 +78,13 @@ function getModel() {
  * @returns {Promise<Object>} The structured coaching response parsed from JSON.
  */
 export async function generateCoachingTips(userLogsSummary) {
+  const cacheKey = `gemini:${JSON.stringify(userLogsSummary)}`;
+  const cached = getCachedValue(cacheKey, 5 * 60 * 1000);
+
+  if (cached) {
+    return cached;
+  }
+
   const model = getModel();
 
   const userPrompt = `
@@ -107,7 +115,9 @@ Provide the JSON coaching response now.
   const cleaned = responseText.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim();
 
   try {
-    return JSON.parse(cleaned);
+    const parsed = JSON.parse(cleaned);
+    setCachedValue(cacheKey, parsed, 5 * 60 * 1000);
+    return parsed;
   } catch {
     throw new Error(`Gemini returned invalid JSON. Raw response: ${responseText.substring(0, 200)}`);
   }

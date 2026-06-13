@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { 
   signInWithPopup, 
+  signInWithRedirect,
   signOut, 
   onAuthStateChanged, 
   getIdToken 
@@ -41,11 +42,27 @@ export function AuthProvider({ children }) {
       setLoading(false);
       return mockUser;
     }
-    
+
     setLoading(true);
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      return result.user;
+      try {
+        const result = await signInWithPopup(auth, googleProvider);
+        return result.user;
+      } catch (popupError) {
+        const popupFallbackCodes = new Set([
+          'auth/popup-blocked',
+          'auth/cancelled-popup-request',
+          'auth/popup-closed-by-user',
+          'auth/network-request-failed'
+        ]);
+
+        if (popupFallbackCodes.has(popupError?.code)) {
+          console.warn('Popup auth unavailable, falling back to redirect sign-in.', popupError);
+          await signInWithRedirect(auth, googleProvider);
+          return null;
+        }
+        throw popupError;
+      }
     } catch (error) {
       console.error('Google Authentication Error:', error);
       throw error;

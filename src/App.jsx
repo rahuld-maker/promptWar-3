@@ -1,15 +1,16 @@
-import { useState } from 'react';
+import { lazy, Suspense, useCallback, useMemo, useState } from 'react';
 import { 
   Home, LogIn, Award, BarChart3, Users, Leaf, Coins, 
   Search, ShieldCheck, Menu, X, CheckCircle2, LogOut 
 } from 'lucide-react';
 import { useAuth } from './context/AuthContext';
 import SignIn from './components/SignIn';
-import DashboardView from './components/DashboardView';
-import LogActionView from './components/LogActionView';
-import ChallengesView from './components/ChallengesView';
-import LeaderboardView from './components/LeaderboardView';
-import AnalyticsView from './components/AnalyticsView';
+
+const DashboardView = lazy(() => import('./components/DashboardView'));
+const LogActionView = lazy(() => import('./components/LogActionView'));
+const ChallengesView = lazy(() => import('./components/ChallengesView'));
+const LeaderboardView = lazy(() => import('./components/LeaderboardView'));
+const AnalyticsView = lazy(() => import('./components/AnalyticsView'));
 import { getApiErrorMessage, requestJson } from './utils/api';
 
 export default function App() {
@@ -64,13 +65,13 @@ export default function App() {
   // Toast Notification state
   const [toastMessage, setToastMessage] = useState(null);
 
-  const showToast = (message) => {
+  const showToast = useCallback((message) => {
     setToastMessage(message);
     setTimeout(() => setToastMessage(null), 4000);
-  };
+  }, []);
 
   // Actions logging handler
-  const handleLogAction = async (action) => {
+  const handleLogAction = useCallback(async (action) => {
     // 1. Optimistic update to keep UI instant and fluid
     setUserStats(prev => {
       const updatedPersonal = parseFloat((prev.savedPersonal + action.savings).toFixed(2));
@@ -115,7 +116,6 @@ export default function App() {
     try {
       const token = await getIdToken();
       if (!token) {
-        console.warn('[Sync Warning] Missing auth token. Action stored offline.');
         return;
       }
 
@@ -129,16 +129,14 @@ export default function App() {
         }),
       });
 
-      console.log('[Sync Success] Backend recorded log transaction:', result);
     } catch (err) {
-      console.warn('[Sync Offline] Express backend connection failed:', getApiErrorMessage(err));
       showToast(`Recorded locally. Sync failed: ${getApiErrorMessage(err)}`);
     }
-  };
+  }, [getIdToken, showToast]);
 
 
   // Delete Log handler
-  const handleDeleteLog = (id) => {
+  const handleDeleteLog = useCallback((id) => {
     const targetLog = recentLogs.find(log => log.id === id);
     if (!targetLog) return;
 
@@ -170,10 +168,10 @@ export default function App() {
 
     setRecentLogs(prev => prev.filter(log => log.id !== id));
     showToast(`Removed log: Saved ${targetLog.savings} kg CO2eq removed.`);
-  };
+  }, [recentLogs, showToast]);
 
   // Join challenge handler
-  const handleJoinChallenge = (id) => {
+  const handleJoinChallenge = useCallback((id) => {
     setChallenges(prev => prev.map(ch => {
       if (ch.id === id) {
         return { ...ch, joined: true, progress: 0 };
@@ -182,10 +180,10 @@ export default function App() {
     }));
     const chName = challenges.find(c => c.id === id)?.title;
     showToast(`Joined Challenge: "${chName}"! Let's get to work.`);
-  };
+  }, [challenges, showToast]);
 
   // Log progress inside challenges
-  const handleLogChallengeProgress = (id) => {
+  const handleLogChallengeProgress = useCallback((id) => {
     setChallenges(prev => prev.map(ch => {
       if (ch.id === id) {
         const nextProgress = Math.min(100, ch.progress + 20);
@@ -219,33 +217,14 @@ export default function App() {
       }
       return ch;
     }));
-  };
+  }, [showToast]);
 
-  // 1. Loading State Screen
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center p-6">
-        <div className="flex flex-col items-center gap-4 animate-pulse">
-          <div className="w-16 h-16 bg-gray-900 border border-gray-800 rounded-2xl flex items-center justify-center">
-            <div className="w-8 h-8 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
-          </div>
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Resolving user session...</p>
-        </div>
-      </div>
-    );
-  }
+  // User profile configuration (must be computed before any early returns)
+  const userDisplayName = useMemo(() => user?.displayName || 'Climate Lead', [user?.displayName]);
+  const userPhotoURL = useMemo(() => user?.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100', [user?.photoURL]);
+  const userEmail = useMemo(() => user?.email || 'user@sagecorp.com', [user?.email]);
 
-  // 2. Unauthenticated state redirect to Sign In
-  if (!user) {
-    return <SignIn />;
-  }
-
-  // User Profile configuration
-  const userDisplayName = user.displayName || 'Climate Lead';
-  const userPhotoURL = user.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100';
-  const userEmail = user.email || 'user@sagecorp.com';
-
-  const renderView = () => {
+  const renderView = useMemo(() => {
     switch (activeTab) {
       case 'home':
         return (
@@ -295,7 +274,26 @@ export default function App() {
           />
         );
     }
-  };
+  }, [activeScope, activeTab, challenges, getIdToken, handleDeleteLog, handleJoinChallenge, handleLogChallengeProgress, handleLogAction, recentLogs, userStats]);
+
+  // 1. Loading State Screen
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center p-6">
+        <div className="flex flex-col items-center gap-4 animate-pulse">
+          <div className="w-16 h-16 bg-gray-900 border border-gray-800 rounded-2xl flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
+          </div>
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Resolving user session...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Unauthenticated state redirect to Sign In
+  if (!user) {
+    return <SignIn />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 flex flex-col md:flex-row relative">
@@ -456,7 +454,9 @@ export default function App() {
 
         {/* 3. Main Content Area */}
         <section aria-label="Page content" className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto">
-          {renderView()}
+          <Suspense fallback={<div className="text-xs text-gray-400">Loading dashboard widgets…</div>}>
+            {renderView}
+          </Suspense>
         </section>
       </main>
     </div>

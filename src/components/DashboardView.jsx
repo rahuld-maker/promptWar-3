@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { 
   Bus, Zap, Utensils, Trash2, ShoppingBag, Plus, Minus, Coins, 
   Users, Leaf, Bike, Train, Car, Plane, 
@@ -6,17 +6,18 @@ import {
 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
 import AICoachCard from './AICoachCard';
+import { EMISSION_FACTORS, CATEGORY_LABELS } from '../utils/constants';
 
-export default function DashboardView({ 
-  userStats, 
-  onLogAction, 
-  activeScope, 
-  setActiveScope, 
+function DashboardView({
+  userStats,
+  onLogAction,
+  activeScope,
+  setActiveScope,
   recentLogs,
   getIdToken
 }) {
   // Tracker and scope definitions
-  const scopeData = {
+  const scopeData = useMemo(() => ({
     personal: {
       saved: userStats.savedPersonal,
       goal: 40.0,
@@ -35,10 +36,10 @@ export default function DashboardView({
       label: 'Global Target',
       treesSnippet: `Incredible! Global savings equal what ${Math.round(userStats.savedGlobal * 0.52).toLocaleString()} trees fix in a month.`
     }
-  };
+  }), [userStats.savedGlobal, userStats.savedPersonal, userStats.savedSageCorp]);
 
-  const currentScopeStats = scopeData[activeScope] || scopeData.personal;
-  const progressPercent = Math.min(100, Math.max(0, (currentScopeStats.saved / currentScopeStats.goal) * 100));
+  const currentScopeStats = useMemo(() => scopeData[activeScope] || scopeData.personal, [activeScope, scopeData]);
+  const progressPercent = useMemo(() => Math.min(100, Math.max(0, (currentScopeStats.saved / currentScopeStats.goal) * 100)), [currentScopeStats]);
 
   // Log action interactive states
   const [activeCategory, setActiveCategory] = useState('travel');
@@ -76,73 +77,34 @@ export default function DashboardView({
   const [analyticsMetric, setAnalyticsMetric] = useState('emissions'); // 'points' or 'emissions'
 
   // Factor definitions for emissions (kg CO2eq saved per unit)
-  const emissionFactors = {
-    travel: {
-      by: { bicycle: 0, bus: 0.03, train: 0.02 },
-      instead: { car: 0.18, flight: 0.25, rickshaw: 0.12 }
-    },
-    energy: {
-      by: { solar: 0, led: 0.005, fan: 0.04 },
-      instead: { grid: 0.5, incandescent: 0.06, ac: 1.2 }
-    },
-    food: {
-      by: { plant: 0.6, local: 0.3, organic: 0.4 },
-      instead: { beef: 3.3, imported: 1.8, fastfood: 1.2 }
-    },
-    waste: {
-      by: { composting: 0, recycling: 0.1, ewaste: 0 },
-      instead: { landfill: 2.0, burning: 2.5, plastic: 3.0 }
-    },
-    shopping: {
-      by: { secondhand: 0.5, reusable: 0, refill: 0.1 },
-      instead: { fastfashion: 8.0, plasticbag: 0.15, container: 0.4 }
-    }
-  };
+  const emissionFactors = EMISSION_FACTORS;
 
   // Calculate savings dynamically
+  /**
+   * Computes the current CO2-equivalent savings for the selected dashboard action.
+   *
+   * @returns {number} Rounded savings in kilograms of CO2-equivalent.
+   */
   const calculateCurrentSavings = () => {
-    let factorBy = 0;
-    let factorInstead = 0;
-    let qty = 0;
+    const categoryConfig = {
+      travel: { factorBy: emissionFactors.travel.by[travelBy], factorInstead: emissionFactors.travel.instead[travelInsteadOf], qty: travelDistance },
+      energy: { factorBy: emissionFactors.energy.by[energyBy], factorInstead: emissionFactors.energy.instead[energyInsteadOf], qty: energyHours },
+      food: { factorBy: emissionFactors.food.by[foodBy], factorInstead: emissionFactors.food.instead[foodInsteadOf], qty: foodPortions },
+      waste: { factorBy: emissionFactors.waste.by[wasteBy], factorInstead: emissionFactors.waste.instead[wasteInsteadOf], qty: wasteWeight },
+      shopping: { factorBy: emissionFactors.shopping.by[shoppingBy], factorInstead: emissionFactors.shopping.instead[shoppingInsteadOf], qty: shoppingItems },
+    };
 
-    switch (activeCategory) {
-      case 'travel':
-        factorBy = emissionFactors.travel.by[travelBy];
-        factorInstead = emissionFactors.travel.instead[travelInsteadOf];
-        qty = travelDistance;
-        break;
-      case 'energy':
-        factorBy = emissionFactors.energy.by[energyBy];
-        factorInstead = emissionFactors.energy.instead[energyInsteadOf];
-        qty = energyHours;
-        break;
-      case 'food':
-        factorBy = emissionFactors.food.by[foodBy];
-        factorInstead = emissionFactors.food.instead[foodInsteadOf];
-        qty = foodPortions;
-        break;
-      case 'waste':
-        factorBy = emissionFactors.waste.by[wasteBy];
-        factorInstead = emissionFactors.waste.instead[wasteInsteadOf];
-        qty = wasteWeight;
-        break;
-      case 'shopping':
-        factorBy = emissionFactors.shopping.by[shoppingBy];
-        factorInstead = emissionFactors.shopping.instead[shoppingInsteadOf];
-        qty = shoppingItems;
-        break;
-      default:
-        break;
-    }
+    const config = categoryConfig[activeCategory];
+    if (!config) return 0;
 
-    const diff = factorInstead - factorBy;
-    return Math.max(0, parseFloat((diff * qty).toFixed(2)));
+    const diff = config.factorInstead - config.factorBy;
+    return Math.max(0, parseFloat((diff * config.qty).toFixed(2)));
   };
 
-  const currentSavings = calculateCurrentSavings();
-  const currentCoolPoints = Math.round(currentSavings * 10);
+  const currentSavings = useMemo(() => calculateCurrentSavings(), [activeCategory, emissionFactors, energyBy, energyHours, energyInsteadOf, foodBy, foodInsteadOf, foodPortions, shoppingBy, shoppingInsteadOf, shoppingItems, travelBy, travelDistance, travelInsteadOf, wasteBy, wasteInsteadOf, wasteWeight]);
+  const currentCoolPoints = useMemo(() => Math.round(currentSavings * 10), [currentSavings]);
 
-  const handleLogActionSubmit = () => {
+  const handleLogActionSubmit = useCallback(() => {
     if (currentSavings <= 0) return;
 
     let desc;
@@ -176,7 +138,7 @@ export default function DashboardView({
     setLastSavedAmount(currentSavings);
     setShowLogSuccess(true);
     setTimeout(() => setShowLogSuccess(false), 4000);
-  };
+  }, [activeCategory, currentSavings, currentCoolPoints, energyBy, energyHours, energyInsteadOf, foodBy, foodPortions, foodInsteadOf, onLogAction, shoppingBy, shoppingInsteadOf, shoppingItems, travelBy, travelDistance, travelInsteadOf, wasteBy, wasteWeight, wasteInsteadOf]);
 
   // Semicircular gauge calculations
   // Path for a beautiful curved semi-circle
@@ -839,35 +801,35 @@ export default function DashboardView({
             <div className="space-y-4">
               {[
                 { 
-                  name: 'Travel', 
+                  name: CATEGORY_LABELS.travel, 
                   savings: userStats.categoryBreakdown.travel, 
                   color: 'bg-emerald-500', 
                   textColor: 'text-emerald-400',
                   icon: Bus 
                 },
                 { 
-                  name: 'Energy', 
+                  name: CATEGORY_LABELS.energy, 
                   savings: userStats.categoryBreakdown.energy, 
                   color: 'bg-amber-500', 
                   textColor: 'text-amber-400',
                   icon: Zap 
                 },
                 { 
-                  name: 'Food', 
+                  name: CATEGORY_LABELS.food, 
                   savings: userStats.categoryBreakdown.food, 
                   color: 'bg-rose-500', 
                   textColor: 'text-rose-400',
                   icon: Utensils 
                 },
                 { 
-                  name: 'Waste', 
+                  name: CATEGORY_LABELS.waste, 
                   savings: userStats.categoryBreakdown.waste, 
                   color: 'bg-purple-500', 
                   textColor: 'text-purple-400',
                   icon: Trash2 
                 },
                 { 
-                  name: 'Shopping', 
+                  name: CATEGORY_LABELS.shopping, 
                   savings: userStats.categoryBreakdown.shopping, 
                   color: 'bg-blue-500', 
                   textColor: 'text-blue-400',
@@ -1062,3 +1024,5 @@ export default function DashboardView({
     </div>
   );
 }
+
+export default memo(DashboardView);
