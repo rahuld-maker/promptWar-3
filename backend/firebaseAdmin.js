@@ -2,6 +2,7 @@ import admin from 'firebase-admin';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
+import { logger } from './utils/logger.js';
 
 dotenv.config();
 
@@ -27,6 +28,8 @@ const parseServiceAccount = () => {
   return null;
 };
 
+let initialized = false;
+
 try {
   const serviceAccount = parseServiceAccount();
 
@@ -34,19 +37,25 @@ try {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     });
-    console.log('Firebase Admin SDK: Initialized with service account credentials.');
-  } else if (process.env.NODE_ENV === 'production') {
-    throw new Error('Firebase Admin credentials are required in production.');
+    logger.info('Firebase Admin SDK initialized with service account credentials.');
   } else {
     admin.initializeApp();
-    console.log('Firebase Admin SDK: Initialized using application default credentials.');
-  }
-} catch (error) {
-  if (process.env.NODE_ENV === 'production') {
-    throw error;
+    logger.info('Firebase Admin SDK initialized using application default credentials.');
   }
 
-  console.warn('Firebase Admin SDK initialization warning:', error.message);
+  initialized = true;
+} catch (error) {
+  if (process.env.NODE_ENV === 'production') {
+    logger.warn('Firebase Admin SDK production fallback failed; continuing with Cloud Run default credentials if available.', {
+      message: error.message,
+    });
+  } else {
+    logger.warn('Firebase Admin SDK initialization warning.', { message: error.message });
+  }
+}
+
+if (!initialized && process.env.NODE_ENV !== 'production') {
+  logger.warn('Firebase Admin SDK did not initialize fully in non-production mode.');
 }
 
 export default admin;
